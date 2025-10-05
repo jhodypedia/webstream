@@ -1,20 +1,28 @@
 <section>
-  <h2 style="margin-bottom:14px;">Server Settings</h2>
+  <h2 style="margin-bottom:14px;">Settings</h2>
   <form id="formSettings" class="admin-settings-form">
     <div class="row">
-      <label>STORAGE_PROVIDER</label>
-      <select name="STORAGE_PROVIDER">
-        <option value="local" <%= env.STORAGE_PROVIDER==='local'?'selected':'' %>>local</option>
-        <option value="s3" <%= env.STORAGE_PROVIDER==='s3'?'selected':'' %>>s3</option>
+      <label>Server HLS Base URL</label>
+      <input name="HLS_BASE_URL" placeholder="https://cdn.yourdomain.com/hls/" />
+    </div>
+    <div class="row">
+      <label>Storage Path</label>
+      <input name="STORAGE_PATH" placeholder="/var/www/videos/" />
+    </div>
+    <div class="row">
+      <label>Max Upload Size (MB)</label>
+      <input name="MAX_UPLOAD_MB" type="number" min="10" max="2048" value="2048" />
+    </div>
+    <div class="row">
+      <label>Transcode Preset</label>
+      <select name="TRANSCODE_PRESET">
+        <option value="1080p">1080p</option>
+        <option value="720p">720p</option>
+        <option value="480p">480p</option>
       </select>
     </div>
-    <div class="row"><label>S3_ENDPOINT</label><input name="S3_ENDPOINT" value="<%= env.S3_ENDPOINT||'' %>" /></div>
-    <div class="row"><label>S3_BUCKET</label><input name="S3_BUCKET" value="<%= env.S3_BUCKET||'' %>" /></div>
-    <div class="row"><label>S3_ACCESS_KEY</label><input name="S3_ACCESS_KEY" value="<%= env.S3_ACCESS_KEY||'' %>" /></div>
-    <div class="row"><label>S3_SECRET_KEY</label><input name="S3_SECRET_KEY" type="password" value="<%= env.S3_SECRET_KEY||'' %>" /></div>
-    <div class="row"><label>TG_BOT_TOKEN</label><input name="TG_BOT_TOKEN" type="password" value="<%= env.TG_BOT_TOKEN||'' %>"/></div>
-    <div class="row"><label>REDIS_URL</label><input name="REDIS_URL" value="<%= env.REDIS_URL||'' %>"/></div>
-    <div class="row"><label>FFMPEG_PATH</label><input name="FFMPEG_PATH" value="<%= env.FFMPEG_PATH||'' %>"/></div>
-    <div class="actions"><button type="submit" class="btn btn-primary">Save Settings</button></div>
+    <div class="actions">
+      <button type="submit" class="btn btn-primary">Save Settings</button>
+    </div>
   </form>
 </section>
