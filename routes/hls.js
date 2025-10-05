@@ -1,39 +1,39 @@
-import { Router } from 'express';
+// /routes/hls.js
+import express from 'express';
 import path from 'path';
-import fs from 'fs';
 import mime from 'mime-types';
+import { fileURLToPath } from 'url';
 import { hlsGuard } from '../middleware/hlsGuard.js';
 
-const r = Router();
+const r = express.Router();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname  = path.dirname(__filename);
 
 /**
- * 🔐 Aman untuk semua versi Express
- * Menangani semua path setelah /:videoId/
- * contoh: /hls/abc123/master.m3u8  → videoId=abc123
- *         /hls/abc123/720p_001.ts → filename=720p_001.ts
+ * Kita mount middleware pada prefix '/:videoId'
+ * Lalu pakai express.static dgn root = storage/hls/:videoId
+ * -> Tidak perlu wildcard pattern, jadi bebas dari error path-to-regexp.
  */
-r.get('/:videoId/*', hlsGuard, async (req, res) => {
-  try {
-    const videoId = req.params.videoId;
-    // ambil path sisa setelah /:videoId/
-    const filename = req.params[0] || 'master.m3u8';
-    const filePath = path.join('storage/hls', videoId, filename);
+r.use('/:videoId', hlsGuard, (req, res, next) => {
+  const baseDir = path.join(__dirname, '..', 'storage', 'hls', req.params.videoId);
 
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).send('Not found');
+  // Buat handler static "instance" untuk root yang sesuai videoId
+  const serve = express.static(baseDir, {
+    fallthrough: false,                    // kalau file nggak ada -> 404
+    setHeaders: (res, filePath) => {
+      res.setHeader('Content-Type', mime.lookup(filePath) || 'application/octet-stream');
+      res.setHeader('Cache-Control', 'private, no-store');
+      res.setHeader('X-Content-Type-Options', 'nosniff');
     }
+  });
 
-    // Deteksi MIME
-    const contentType = mime.lookup(filePath) || 'application/octet-stream';
-    res.setHeader('Content-Type', contentType);
-    res.setHeader('Cache-Control', 'private, no-store');
-    res.setHeader('X-Content-Type-Options', 'nosniff');
-
-    return res.sendFile(path.resolve(filePath));
-  } catch (err) {
-    console.error('[HLS Serve Error]', err);
-    return res.status(500).send('Internal Server Error');
-  }
+  // Jalankan static untuk request ini
+  serve(req, res, (err) => {
+    if (err) return next(err);
+    // Kalau tidak ketemu file
+    return res.status(404).send('Not found');
+  });
 });
 
 export default r;
