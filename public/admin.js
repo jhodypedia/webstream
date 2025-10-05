@@ -2,41 +2,42 @@
 const socket = io(); // realtime jobs/dashboard
 
 $(function(){
-  // Sidebar toggle responsive
+  /* === Sidebar toggle === */
   const sidebar = document.querySelector('.sidebar');
   const toggleBtns = document.querySelectorAll('.toggle-sidebar, .sidebar .toggle-btn');
-  toggleBtns.forEach(btn=>{
-    btn.addEventListener('click', ()=> sidebar.classList.toggle('open'));
+  toggleBtns.forEach(btn => {
+    btn.addEventListener('click', () => sidebar.classList.toggle('open'));
   });
 
-  // Highlight active menu item
+  /* === Highlight active menu === */
   const current = location.pathname;
   $('.menu-item').each(function(){
     const href = $(this).attr('href');
     if (href && current.startsWith(href)) $(this).addClass('active');
   });
 
-  // PAGE INIT
+  /* === Page Init === */
   if ($('#tblVideos').length) initVideosPage();
   if ($('#tblJobs').length) initJobsPage();
   if ($('#dzUpload').length) initUploadPage();
   if ($('#formSettings').length) initSettingsPage();
 
-  // Realtime dashboard counters
+  /* === Realtime Dashboard Counters === */
   socket.on('job:completed', () => bump('#statJobsRunning', -1));
   socket.on('job:failed', () => bump('#statJobsRunning', -1));
   socket.on('job:progress', () => {});
 });
 
-function bump(sel, delta) {
+/* === Helper === */
+function bump(sel, delta){
   const el = document.querySelector(sel);
   if (!el) return;
   const n = parseInt(el.textContent||'0',10) + (delta||0);
   el.textContent = Math.max(n, 0);
 }
 
-/* ===== Videos ===== */
-function initVideosPage() {
+/* === Videos Page === */
+function initVideosPage(){
   const $table = $('#tblVideos');
   const $modal = $('#modalVideo');
   const $form = $('#formVideo');
@@ -45,7 +46,7 @@ function initVideosPage() {
   const showLoader = () => $('body').append('<div id="loader" class="loading-overlay"><div class="spinner"></div></div>');
   const hideLoader = () => $('#loader').remove();
 
-  function loadTable() {
+  function loadTable(){
     showLoader();
     $.get('/admin/api/videos').done(res=>{
       hideLoader();
@@ -69,8 +70,8 @@ function initVideosPage() {
           `
         ];
       });
-      if (datatable) {
-        datatable.clear(); datatable.rows.add(rows).draw();
+      if (datatable){
+        datatable.clear().rows.add(rows).draw();
       } else {
         datatable = $table.DataTable({
           data: rows,
@@ -106,23 +107,15 @@ function initVideosPage() {
       title: d.title, description: d.description,
       hls_master_url: d.hls_master_url, thumbnail_url: d.thumbnail_url, status: d.status
     };
-    if (d.id) {
-      $.ajax({ url:'/admin/api/videos/'+d.id, method:'PUT', contentType:'application/json', data:JSON.stringify(payload) })
-       .done(res=>{ 
-         if(res.ok){
-           Swal.fire('Saved','Video updated','success');
-           closeVideoModal(); loadTable();
-         } else Swal.fire('Error',res.error||'Failed','error');
-       });
-    } else {
-      $.ajax({ url:'/admin/api/videos', method:'POST', contentType:'application/json', data:JSON.stringify(payload) })
-       .done(res=>{ 
-         if(res.ok){
-           Swal.fire('Created','Video created','success');
-           closeVideoModal(); loadTable();
-         } else Swal.fire('Error',res.error||'Failed','error');
-       });
-    }
+    const method = d.id ? 'PUT' : 'POST';
+    const url = d.id ? '/admin/api/videos/'+d.id : '/admin/api/videos';
+    $.ajax({ url, method, contentType:'application/json', data:JSON.stringify(payload) })
+    .done(res=>{
+      if(res.ok){
+        Swal.fire('Success','Video saved','success');
+        closeVideoModal(); loadTable();
+      } else Swal.fire('Error', res.error || 'Failed','error');
+    });
   });
 
   function openVideoModal(id){
@@ -133,12 +126,7 @@ function initVideosPage() {
     $.get('/admin/api/videos').done(res=>{
       const it = (res.items||[]).find(x=>x.id===id);
       if(!it) return;
-      $('#formVideo [name=id]').val(it.id);
-      $('#formVideo [name=title]').val(it.title||'');
-      $('#formVideo [name=description]').val(it.description||'');
-      $('#formVideo [name=hls_master_url]').val(it.hls_master_url||'');
-      $('#formVideo [name=thumbnail_url]').val(it.thumbnail_url||'');
-      $('#formVideo [name=status]').val(it.status||'ready');
+      Object.entries(it).forEach(([k,v])=> $('#formVideo [name='+k+']').val(v||''));
       $modal.removeAttr('hidden');
     });
   }
@@ -155,8 +143,10 @@ function deleteVideo(id, onDone){
   });
 }
 
-/* ===== Upload ===== */
+/* === Upload Page === */
 function initUploadPage(){
+  if (Dropzone.forElement('#dzUpload')) return; // Prevent double init
+
   Dropzone.autoDiscover = false;
   const dz = new Dropzone('#dzUpload', {
     url: '/admin/api/upload',
@@ -177,11 +167,10 @@ function initUploadPage(){
   });
 }
 
-/* ===== Jobs ===== */
+/* === Jobs Page === */
 function initJobsPage(){
   const $table = $('#tblJobs');
   let datatable;
-
   function loadJobs(){
     $.get('/admin/api/jobs').done(res=>{
       if(!res.ok) return;
@@ -189,8 +178,8 @@ function initJobsPage(){
         const updated = new Date(j.updatedAt || j.createdAt).toLocaleString('id-ID');
         return [ j.video_id, j.type, j.status, (j.progress||0)+'%', updated ];
       });
-      if (datatable) {
-        datatable.clear(); datatable.rows.add(rows).draw();
+      if (datatable){
+        datatable.clear().rows.add(rows).draw();
       } else {
         datatable = $table.DataTable({
           data: rows,
@@ -208,13 +197,12 @@ function initJobsPage(){
     });
   }
   loadJobs();
-
-  socket.on('job:progress', ()=> loadJobs());
-  socket.on('job:completed', ()=> loadJobs());
-  socket.on('job:failed', ()=> loadJobs());
+  socket.on('job:progress', loadJobs);
+  socket.on('job:completed', loadJobs);
+  socket.on('job:failed', loadJobs);
 }
 
-/* ===== Settings ===== */
+/* === Settings Page === */
 function initSettingsPage(){
   $('#formSettings').on('submit', function(e){
     e.preventDefault();
@@ -224,18 +212,18 @@ function initSettingsPage(){
       headers: { 'Content-Type':'application/json' },
       body: JSON.stringify(payload)
     }).then(r=>r.json()).then(res=>{
-      if(res.ok) Swal.fire('Saved','Settings updated (runtime reloaded)','success');
+      if(res.ok) Swal.fire('Saved','Settings updated','success');
       else Swal.fire('Error',res.error||'Failed','error');
     }).catch(()=> Swal.fire('Error','Network error','error'));
   });
 }
 
-/* ===== Utility ===== */
+/* === Utility === */
 function escapeHtml(s){
   return (s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
 
-/* Loader Style (append this CSS dynamically if missing) */
+/* === Loader CSS === */
 if (!document.querySelector('#admin-loader-style')) {
   const style = document.createElement('style');
   style.id = 'admin-loader-style';
