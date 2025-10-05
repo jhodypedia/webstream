@@ -13,16 +13,26 @@ r.post('/videos/intake', async (req,res)=>{
     const { title, description, owner_user_id } = req.body;
     const id = uuid();
     const slug = (slugify(title) + '-' + id.slice(0,6)).toLowerCase();
+
     const video = await Video.create({
-      id, title: title || 'Untitled', description: description || '',
-      slug, status:'uploaded', storage_provider: process.env.STORAGE_PROVIDER,
+      id,
+      title: title || 'Untitled',
+      description: description || '',
+      slug,
+      status:'uploaded',
+      storage_provider: process.env.STORAGE_PROVIDER,
       owner_user_id: owner_user_id || null
     });
+
     await Job.create({ video_id: id, type:'transcode', status:'queued' });
+
+    // ✅ Kirim ke queue yang baru tanpa titik dua
     await transcodeQueue.add('transcode', { videoId: id });
 
     res.json({ ok:true, video });
-  } catch (e) { res.status(500).json({ ok:false, error: e.message }); }
+  } catch (e) {
+    res.status(500).json({ ok:false, error: e.message });
+  }
 });
 
 // View ++
