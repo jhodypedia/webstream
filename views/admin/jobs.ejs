@@ -1,6 +1,10 @@
 <section>
-  <h2 style="margin-bottom:14px;">Jobs Queue</h2>
-  <table id="tblJobs" class="display" style="width:100%">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+    <h2>Transcode Jobs</h2>
+    <button class="btn btn-primary" id="btnReloadJobs"><i class="fa fa-rotate"></i> Refresh</button>
+  </div>
+
+  <table id="tblJobs" class="display nowrap" style="width:100%">
     <thead>
       <tr>
         <th>Video ID</th>
@@ -13,11 +17,8 @@
     <tbody></tbody>
   </table>
 
-  <div style="margin-top:20px;color:#9aa7b6;">
-    <ul style="line-height:1.6;">
-      <li><strong>Type</strong> dapat berupa <code>transcode</code>, <code>thumbnail</code>, atau <code>cleanup</code>.</li>
-      <li>Status berubah otomatis saat proses berjalan melalui <strong>socket.io</strong>.</li>
-      <li>Refresh halaman untuk melihat update jika socket terputus.</li>
-    </ul>
-  </div>
+  <p style="margin-top:14px;color:var(--admin-muted);">
+    <strong>Type:</strong> <code>transcode</code>, <code>thumbnail</code>, or <code>cleanup</code><br>
+    Status auto-updates via <strong>Socket.IO</strong>.
+  </p>
 </section>
