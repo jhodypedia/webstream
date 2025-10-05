@@ -5,48 +5,44 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title><%= title || "Admin | PansaStream" %></title>
 
-  <!-- Fonts -->
+  <!-- Fonts & Base -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
-
-  <!-- Base CSS -->
   <link rel="stylesheet" href="/public/app.css" />
   <link rel="stylesheet" href="/public/admin.css" />
 
-  <!-- Libraries -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" />
-  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/dropzone@5.9.3/dist/min/dropzone.min.css" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css" />
+  <!-- ✅ CDN Essentials -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-dark@5/dark.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
 </head>
 
 <body class="admin-theme">
   <div class="admin-layout">
-    <!-- Sidebar -->
+    <!-- ===== SIDEBAR ===== -->
     <aside class="sidebar">
       <div class="logo">
         <a href="/admin" class="brand">
-          <svg class="ico" viewBox="0 0 24 24" width="22" height="22">
-            <path fill="currentColor" d="M3 5h18v4H3zM3 10h18v9H3z"/>
-          </svg>
+          <i class="fa-solid fa-layer-group"></i>
           <span>Pansa<span class="accent">Admin</span></span>
         </a>
-        <button class="toggle-btn"><i class="fa-solid fa-xmark"></i></button>
+        <button class="toggle-btn"><i class="fa-solid fa-bars"></i></button>
       </div>
 
       <nav class="menu">
-        <a href="/admin" class="menu-item <%= active==='dashboard'?'active':'' %>">
+        <a href="/admin" class="menu-item <%= active==='dashboard' ? 'active' : '' %>">
           <i class="fa-solid fa-gauge-high"></i><span>Dashboard</span>
         </a>
-        <a href="/admin/upload" class="menu-item <%= active==='upload'?'active':'' %>">
+        <a href="/admin/upload" class="menu-item <%= active==='upload' ? 'active' : '' %>">
           <i class="fa-solid fa-upload"></i><span>Upload</span>
         </a>
-        <a href="/admin/videos" class="menu-item <%= active==='videos'?'active':'' %>">
+        <a href="/admin/videos" class="menu-item <%= active==='videos' ? 'active' : '' %>">
           <i class="fa-solid fa-photo-film"></i><span>Videos</span>
         </a>
-        <a href="/admin/jobs" class="menu-item <%= active==='jobs'?'active':'' %>">
+        <a href="/admin/jobs" class="menu-item <%= active==='jobs' ? 'active' : '' %>">
           <i class="fa-solid fa-list-check"></i><span>Jobs</span>
         </a>
-        <a href="/admin/settings" class="menu-item <%= active==='settings'?'active':'' %>">
+        <a href="/admin/settings" class="menu-item <%= active==='settings' ? 'active' : '' %>">
           <i class="fa-solid fa-gear"></i><span>Settings</span>
         </a>
       </nav>
@@ -58,7 +54,7 @@
       </div>
     </aside>
 
-    <!-- Main Content -->
+    <!-- ===== MAIN ===== -->
     <div class="main">
       <header class="admin-topbar">
         <button class="toggle-sidebar"><i class="fa-solid fa-bars"></i></button>
@@ -75,35 +71,12 @@
     </div>
   </div>
 
-  <!-- JS Libraries -->
+  <!-- ===== SCRIPTS ===== -->
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/dropzone@5.9.3/dist/min/dropzone.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.5/dist/socket.io.min.js"></script>
-
-  <!-- Main Admin JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
   <script src="/public/admin.js"></script>
-
-  <!-- Sidebar Toggle Logic -->
-  <script>
-    $(function(){
-      const sidebar = document.querySelector('.sidebar');
-      const openBtn = document.querySelector('.toggle-sidebar');
-      const closeBtn = document.querySelector('.sidebar .toggle-btn');
-
-      if(openBtn) openBtn.addEventListener('click', ()=> sidebar.classList.add('open'));
-      if(closeBtn) closeBtn.addEventListener('click', ()=> sidebar.classList.remove('open'));
-
-      // close sidebar on mobile click outside
-      document.addEventListener('click', e=>{
-        if (window.innerWidth <= 1024 && sidebar.classList.contains('open')) {
-          if (!sidebar.contains(e.target) && !openBtn.contains(e.target)) {
-            sidebar.classList.remove('open');
-          }
-        }
-      });
-    });
-  </script>
 </body>
 </html>
