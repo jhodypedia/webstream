@@ -21,15 +21,12 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// =====================================
-// 🚀 INIT EXPRESS + SOCKET.IO
-// =====================================
 const app = express();
 const server = http.createServer(app);
 initIO(server);
 
 // =====================================
-// ⚙️ MIDDLEWARES
+// ⚙️ MIDDLEWARE
 // =====================================
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
@@ -50,29 +47,24 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'pansa-stream-secret',
   resave: false,
   saveUninitialized: false,
-  cookie: {
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 hari
-    sameSite: 'lax'
-  }
+  cookie: { maxAge: 7 * 24 * 60 * 60 * 1000 } // 7 hari
 }));
 
 // =====================================
-// 🧩 GLOBAL HELPER MIDDLEWARE
+// 🧩 GLOBAL VARIABLES UNTUK SEMUA LAYOUT
 // =====================================
 app.use((req, res, next) => {
   res.locals.session = req.session;
   res.locals.isAdmin = !!req.session.user;
+  res.locals.user = req.session.user || null; // ✅ agar <%= user %> tidak undefined
+  res.locals.active = ''; // default value agar tidak undefined
 
-  // default variabel supaya tidak undefined di EJS
-  if (typeof res.locals.active === 'undefined') res.locals.active = '';
-
-  // auto switch layout sesuai path
+  // Auto pilih layout sesuai route
   if (req.originalUrl.startsWith('/admin')) {
     app.set('layout', 'layouts/admin');
   } else {
     app.set('layout', 'layouts/main');
   }
-
   next();
 });
 
@@ -87,29 +79,28 @@ app.use('/admin', adminRoutes);
 // =====================================
 // ❌ ERROR HANDLING
 // =====================================
-
-// 404 Not Found
 app.use((req, res) => {
+  const isAdmin = req.originalUrl.startsWith('/admin');
   if (req.originalUrl.startsWith('/api/')) {
     res.status(404).json({ ok: false, error: 'Not Found' });
   } else {
-    res.status(404).render('404', {
-      title: 'Page Not Found',
-      layout: req.originalUrl.startsWith('/admin') ? 'layouts/admin' : 'layouts/main'
+    res.status(404).render('404', { 
+      title: 'Not Found', 
+      layout: isAdmin ? 'layouts/admin' : 'layouts/main'
     });
   }
 });
 
-// 500 Server Error
 app.use((err, req, res, next) => {
   console.error('[Server Error]', err);
+  const isAdmin = req.originalUrl.startsWith('/admin');
   if (req.originalUrl.startsWith('/api/')) {
     res.status(500).json({ ok: false, error: err.message });
   } else {
-    res.status(500).render('500', {
+    res.status(500).render('500', { 
       title: 'Server Error',
       error: err.message,
-      layout: req.originalUrl.startsWith('/admin') ? 'layouts/admin' : 'layouts/main'
+      layout: isAdmin ? 'layouts/admin' : 'layouts/main'
     });
   }
 });
@@ -118,7 +109,7 @@ app.use((err, req, res, next) => {
 // 🚀 START SERVER
 // =====================================
 const PORT = process.env.PORT || 3000;
-await sequelize.sync(); // gunakan migration di production
+await sequelize.sync();
 
 server.listen(PORT, () => {
   console.log(`🚀 PansaStream running on: http://localhost:${PORT}`);
