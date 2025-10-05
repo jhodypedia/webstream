@@ -1,91 +1,26 @@
-<section class="upload-section">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+<section>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
     <h2>Manual Upload</h2>
-    <a href="/admin/jobs" class="btn btn-ghost">
-      <i class="fa-solid fa-list-check"></i> Lihat Jobs
-    </a>
+    <a href="/admin/jobs" class="btn btn-ghost">Lihat Jobs</a>
   </div>
 
-  <!-- Dropzone -->
   <form action="/admin/api/upload" class="dropzone" id="dzUpload">
-    <div class="dz-message" data-dz-message>
-      <i class="fa-solid fa-cloud-arrow-up" style="font-size:40px;color:var(--admin-accent);margin-bottom:8px;"></i>
-      <p>Drop file di sini atau klik untuk memilih</p>
-      <small>Format: <strong>.mp4, .mov, .mkv</strong> &nbsp;|&nbsp; Maksimum <strong>2GB</strong></small>
+    <div class="dz-message needsclick">
+      <i class="fa-solid fa-cloud-arrow-up" style="font-size:40px;color:var(--admin-accent);margin-bottom:10px;"></i><br>
+      Drop file di sini atau klik untuk memilih
     </div>
   </form>
 
-  <!-- Info -->
-  <div class="upload-info" style="margin-top:18px;color:var(--admin-muted);">
-    <h4 style="margin-bottom:6px;">Catatan:</h4>
-    <ul style="margin-left:18px;line-height:1.6;">
+  <p style="color:#9aa7b6;margin-top:8px;">
+    Format diterima: <strong>.mp4, .mov, .mkv</strong> (maksimum 2GB)
+  </p>
+
+  <div style="margin-top:20px;">
+    <h4>Catatan:</h4>
+    <ul style="color:#9aa7b6;line-height:1.6;">
       <li>File akan otomatis dikirim ke <code>transcode</code> queue untuk diproses.</li>
       <li>Status proses dapat dilihat di tab <strong>Jobs</strong>.</li>
       <li>Gunakan koneksi stabil untuk upload besar agar tidak gagal.</li>
     </ul>
   </div>
 </section>
-
-<script>
-  // Pastikan Dropzone belum terpasang dua kali
-  Dropzone.autoDiscover = false;
-  if (!window.__dzInitialized) {
-    window.__dzInitialized = true;
-    new Dropzone("#dzUpload", {
-      url: "/admin/api/upload",
-      maxFilesize: 2048, // MB
-      acceptedFiles: ".mp4,.mov,.mkv",
-      parallelUploads: 1,
-      createImageThumbnails: false,
-      addRemoveLinks: true,
-      dictRemoveFile: "Hapus",
-      init: function(){
-        this.on("success", (file, res) => {
-          if(res && res.ok){
-            Swal.fire("Queued", "Upload diterima & dikirim ke transcode queue", "success");
-          } else {
-            Swal.fire("Error", (res && res.error) || "Gagal upload", "error");
-          }
-        });
-        this.on("error", (file, msg) => Swal.fire("Error", msg, "error"));
-      }
-    });
-  }
-</script>
-
-<style>
-/* ===== Custom Dropzone Look ===== */
-.upload-section .dropzone {
-  border: 2px dashed rgba(255,255,255,.25);
-  background: rgba(255,255,255,.03);
-  border-radius: 16px;
-  padding: 40px 20px;
-  text-align: center;
-  transition: all 0.3s ease;
-}
-.upload-section .dropzone:hover {
-  border-color: var(--admin-accent);
-  background: rgba(255,255,255,.06);
-  box-shadow: 0 0 18px rgba(107,226,255,.2);
-  transform: translateY(-2px);
-}
-.upload-section .dz-message {
-  color: var(--admin-text);
-  font-size: 16px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-}
-.upload-section .dz-progress {
-  background: rgba(255,255,255,.1);
-  height: 8px;
-  border-radius: 10px;
-  overflow: hidden;
-  margin-top: 6px;
-}
-.upload-section .dz-upload {
-  background: linear-gradient(90deg,var(--admin-primary),var(--admin-accent));
-  height: 8px;
-}
-</style>
