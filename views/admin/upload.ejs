@@ -52,3 +52,40 @@
     });
   }
 </script>
+
+<style>
+/* ===== Custom Dropzone Look ===== */
+.upload-section .dropzone {
+  border: 2px dashed rgba(255,255,255,.25);
+  background: rgba(255,255,255,.03);
+  border-radius: 16px;
+  padding: 40px 20px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+.upload-section .dropzone:hover {
+  border-color: var(--admin-accent);
+  background: rgba(255,255,255,.06);
+  box-shadow: 0 0 18px rgba(107,226,255,.2);
+  transform: translateY(-2px);
+}
+.upload-section .dz-message {
+  color: var(--admin-text);
+  font-size: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.upload-section .dz-progress {
+  background: rgba(255,255,255,.1);
+  height: 8px;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 6px;
+}
+.upload-section .dz-upload {
+  background: linear-gradient(90deg,var(--admin-primary),var(--admin-accent));
+  height: 8px;
+}
+</style>
