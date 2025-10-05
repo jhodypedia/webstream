@@ -1,9 +1,9 @@
-<section class="watch-page">
-  <div class="player-container">
-    <div class="video-box">
+<section class="watch-wrap">
+  <div class="video-wrapper">
+    <div class="video-inner">
       <video id="player" preload="metadata" playsinline></video>
 
-      <!-- Overlay (Play Button) -->
+      <!-- Overlay Play Button -->
       <div class="overlay" id="overlay">
         <button id="playPauseBtn" class="play-btn">
           <i class="fa-solid fa-play"></i>
@@ -15,32 +15,25 @@
         <div class="progress-bar" id="progressBar">
           <div id="progress"></div>
         </div>
+
         <div class="buttons">
-          <button id="playPauseCtrl" class="ctrl-btn">
-            <i class="fa-solid fa-play"></i>
-          </button>
-          <button id="muteBtn" class="ctrl-btn">
-            <i class="fa-solid fa-volume-high"></i>
-          </button>
+          <button id="playPauseCtrl" class="ctrl-btn"><i class="fa-solid fa-play"></i></button>
+          <button id="muteBtn" class="ctrl-btn"><i class="fa-solid fa-volume-high"></i></button>
           <input id="volume" type="range" min="0" max="1" step="0.05" value="1">
-          <button id="fullscreenBtn" class="ctrl-btn">
-            <i class="fa-solid fa-expand"></i>
-          </button>
+          <button id="fullscreenBtn" class="ctrl-btn"><i class="fa-solid fa-expand"></i></button>
         </div>
       </div>
     </div>
 
-    <!-- Meta Info -->
-    <div class="video-meta">
-      <h1><%= video.title %></h1>
-      <div class="meta-stats">
-        <i class="fa-solid fa-eye"></i>
-        <span id="views"><%= video.views %></span> views
+    <div class="meta">
+      <h1 class="title"><%= video.title %></h1>
+      <div class="stats">
+        <i class="fa-solid fa-eye"></i> <span id="views"><%= video.views %></span> views
         <span>•</span>
         <span><%= new Date(video.createdAt).toLocaleDateString('id-ID') %></span>
       </div>
       <% if (video.description) { %>
-        <p class="description"><%= video.description %></p>
+        <p class="desc"><%= video.description %></p>
       <% } %>
     </div>
   </div>
@@ -60,9 +53,8 @@
   const progress = document.getElementById('progress');
   const progressBar = document.getElementById('progressBar');
   const controls = document.getElementById('controls');
-  const src = '<%= video.hls_master_url %>';
 
-  // Setup HLS
+  const src = '<%= video.hls_master_url %>';
   if (Hls.isSupported()) {
     const hls = new Hls();
     hls.loadSource(src);
@@ -71,23 +63,21 @@
     video.src = src;
   }
 
-  // Play / Pause
   const togglePlay = () => video.paused ? video.play() : video.pause();
   playPauseBtn.onclick = togglePlay;
   playPauseCtrl.onclick = togglePlay;
 
   video.addEventListener('play', ()=>{
-    overlay.style.opacity = 0;
+    overlay.classList.add('hide');
     playPauseBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
     playPauseCtrl.innerHTML = '<i class="fa-solid fa-pause"></i>';
   });
   video.addEventListener('pause', ()=>{
-    overlay.style.opacity = 1;
+    overlay.classList.remove('hide');
     playPauseBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
     playPauseCtrl.innerHTML = '<i class="fa-solid fa-play"></i>';
   });
 
-  // Volume
   muteBtn.addEventListener('click', ()=>{
     video.muted = !video.muted;
     muteBtn.innerHTML = video.muted 
@@ -98,7 +88,6 @@
     video.volume = e.target.value;
   });
 
-  // Progress
   video.addEventListener('timeupdate', ()=>{
     const p = (video.currentTime / video.duration) * 100;
     progress.style.width = p + '%';
@@ -109,16 +98,11 @@
     video.currentTime = pos * video.duration;
   });
 
-  // Fullscreen manual only
   fullscreenBtn.addEventListener('click', ()=>{
-    if (!document.fullscreenElement) {
-      video.parentElement.requestFullscreen();
-    } else {
-      document.exitFullscreen();
-    }
+    if (!document.fullscreenElement) video.parentElement.requestFullscreen();
+    else document.exitFullscreen();
   });
 
-  // Hide controls when idle
   let timer;
   document.addEventListener('mousemove', ()=>{
     controls.classList.remove('hidden');
@@ -126,7 +110,6 @@
     timer = setTimeout(()=> controls.classList.add('hidden'), 2500);
   });
 
-  // Increment view count
   fetch('/api/videos/view/<%= video.id %>', { method:'POST' })
     .then(()=> {
       const el = document.getElementById('views');
@@ -134,3 +117,73 @@
     });
 })();
 </script>
+
+<style>
+.watch-wrap {
+  display:flex;justify-content:center;
+  padding:30px 10px; background:var(--bg);
+}
+.video-wrapper {
+  width:100%; max-width:950px; display:flex;flex-direction:column; gap:16px;
+}
+.video-inner {
+  position:relative; aspect-ratio:16/9; background:#000; overflow:hidden; border-radius:14px;
+  box-shadow:0 10px 30px rgba(0,0,0,.6);
+}
+.video-inner video {
+  width:100%; height:100%; object-fit:contain; background:#000;
+}
+.overlay {
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  transition:opacity .3s ease; background:rgba(0,0,0,.25);
+}
+.overlay.hide { opacity:0; pointer-events:none; }
+.play-btn {
+  width:90px; height:90px; border-radius:50%; border:none; cursor:pointer;
+  background:rgba(255,255,255,.2); color:#fff; backdrop-filter:blur(6px);
+  font-size:28px; display:flex; align-items:center; justify-content:center;
+  transition:transform .25s ease, background .3s;
+}
+.play-btn:hover { transform:scale(1.1); background:rgba(255,255,255,.35); }
+
+.controls {
+  position:absolute; bottom:0; left:0; right:0;
+  padding:12px; background:linear-gradient(180deg, transparent, rgba(0,0,0,.9));
+  transition:opacity .3s ease;
+}
+.controls.hidden { opacity:0; pointer-events:none; }
+
+.progress-bar {
+  height:5px; background:rgba(255,255,255,.15); border-radius:3px;
+  overflow:hidden; margin-bottom:10px; cursor:pointer;
+}
+#progress {
+  height:100%; width:0%; background:linear-gradient(90deg,var(--accent),var(--primary));
+}
+
+.buttons { display:flex; gap:10px; align-items:center; }
+.ctrl-btn {
+  background:rgba(255,255,255,.12); border:none; border-radius:8px;
+  padding:8px; color:#fff; cursor:pointer; transition:background .2s;
+}
+.ctrl-btn:hover { background:rgba(255,255,255,.25); }
+input[type=range] {
+  accent-color:var(--accent);
+  width:100px; cursor:pointer;
+}
+
+.meta {
+  padding:10px 4px;
+}
+.meta .title {
+  font-size:clamp(22px,2.5vw,26px);
+}
+.meta .stats {
+  display:flex; gap:8px; align-items:center;
+  color:var(--muted); font-size:14px;
+  margin:6px 0 8px;
+}
+.meta .desc {
+  color:var(--muted); font-size:15px; line-height:1.5;
+}
+</style>
