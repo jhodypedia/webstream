@@ -1,0 +1,21 @@
+<section>
+  <div class="stat-grid">
+    <div class="stat-card"><h2 id="statTotalVideos"><%= stats.totalVideos %></h2><p>Total Videos</p></div>
+    <div class="stat-card"><h2 id="statTotalViews"><%= stats.totalViews %></h2><p>Total Views</p></div>
+    <div class="stat-card"><h2 id="statJobsQueued"><%= stats.jobsQueued %></h2><p>Jobs Queued</p></div>
+    <div class="stat-card"><h2 id="statJobsRunning"><%= stats.jobsRunning %></h2><p>Jobs Running</p></div>
+  </div>
+
+  <div class="card" style="background:var(--card);padding:16px;border-radius:12px;">
+    <h3 style="margin-bottom:10px;">Quick Actions</h3>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <a class="btn btn-primary" href="/admin/upload">+ Upload Video</a>
+      <a class="btn btn-ghost" href="/admin/videos">Manage Videos</a>
+      <a class="btn btn-ghost" href="/admin/jobs">Jobs Monitor</a>
+      <a class="btn btn-ghost" href="/admin/settings">Server Settings</a>
+    </div>
+  </div>
+</section>
+<script>
+  // realtime (optional minor: update badge via socket in admin.js)
+</script>
