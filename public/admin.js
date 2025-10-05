@@ -1,17 +1,31 @@
-// public/admin.js
-const socket = io(); // for realtime jobs/dashboard
+// 📁 public/admin.js
+const socket = io(); // realtime jobs/dashboard
 
 $(function(){
-  // PAGE HOOKS
+  // Sidebar toggle responsive
+  const sidebar = document.querySelector('.sidebar');
+  const toggleBtns = document.querySelectorAll('.toggle-sidebar, .sidebar .toggle-btn');
+  toggleBtns.forEach(btn=>{
+    btn.addEventListener('click', ()=> sidebar.classList.toggle('open'));
+  });
+
+  // Highlight active menu item
+  const current = location.pathname;
+  $('.menu-item').each(function(){
+    const href = $(this).attr('href');
+    if (href && current.startsWith(href)) $(this).addClass('active');
+  });
+
+  // PAGE INIT
   if ($('#tblVideos').length) initVideosPage();
   if ($('#tblJobs').length) initJobsPage();
   if ($('#dzUpload').length) initUploadPage();
   if ($('#formSettings').length) initSettingsPage();
 
-  // Realtime dashboard counters (optional: server can emit aggregates)
-  socket.on('job:completed', () => { bump('#statJobsRunning', -1); });
-  socket.on('job:failed', () => { bump('#statJobsRunning', -1); });
-  socket.on('job:progress', () => { /* could update live */ });
+  // Realtime dashboard counters
+  socket.on('job:completed', () => bump('#statJobsRunning', -1));
+  socket.on('job:failed', () => bump('#statJobsRunning', -1));
+  socket.on('job:progress', () => {});
 });
 
 function bump(sel, delta) {
@@ -28,10 +42,17 @@ function initVideosPage() {
   const $form = $('#formVideo');
   let datatable;
 
+  const showLoader = () => $('body').append('<div id="loader" class="loading-overlay"><div class="spinner"></div></div>');
+  const hideLoader = () => $('#loader').remove();
+
   function loadTable() {
+    showLoader();
     $.get('/admin/api/videos').done(res=>{
+      hideLoader();
       const rows = (res.items||[]).map(v=>{
-        const thumb = v.thumbnail_url ? `<img src="${v.thumbnail_url}" style="width:80px;height:45px;object-fit:cover;border-radius:6px">` : '-';
+        const thumb = v.thumbnail_url 
+          ? `<img src="${v.thumbnail_url}" style="width:80px;height:45px;object-fit:cover;border-radius:6px">`
+          : '<div style="width:80px;height:45px;background:#222;border-radius:6px"></div>';
         const created = new Date(v.createdAt).toLocaleString('id-ID');
         return [
           thumb,
@@ -48,8 +69,9 @@ function initVideosPage() {
           `
         ];
       });
-      if (datatable) { datatable.clear(); datatable.rows.add(rows).draw(); }
-      else {
+      if (datatable) {
+        datatable.clear(); datatable.rows.add(rows).draw();
+      } else {
         datatable = $table.DataTable({
           data: rows,
           columns: [
@@ -60,10 +82,11 @@ function initVideosPage() {
             { title: 'Created' },
             { title: 'Actions', orderable: false }
           ],
-          pageLength: 10
+          pageLength: 10,
+          responsive: true
         });
       }
-    });
+    }).fail(()=> hideLoader());
   }
   loadTable();
 
@@ -85,10 +108,20 @@ function initVideosPage() {
     };
     if (d.id) {
       $.ajax({ url:'/admin/api/videos/'+d.id, method:'PUT', contentType:'application/json', data:JSON.stringify(payload) })
-       .done(res=>{ if(res.ok){ Swal.fire('Saved','Video updated','success'); closeVideoModal(); loadTable(); } else Swal.fire('Error',res.error||'Failed','error'); });
+       .done(res=>{ 
+         if(res.ok){
+           Swal.fire('Saved','Video updated','success');
+           closeVideoModal(); loadTable();
+         } else Swal.fire('Error',res.error||'Failed','error');
+       });
     } else {
       $.ajax({ url:'/admin/api/videos', method:'POST', contentType:'application/json', data:JSON.stringify(payload) })
-       .done(res=>{ if(res.ok){ Swal.fire('Created','Video created','success'); closeVideoModal(); loadTable(); } else Swal.fire('Error',res.error||'Failed','error'); });
+       .done(res=>{ 
+         if(res.ok){
+           Swal.fire('Created','Video created','success');
+           closeVideoModal(); loadTable();
+         } else Swal.fire('Error',res.error||'Failed','error');
+       });
     }
   });
 
@@ -127,7 +160,7 @@ function initUploadPage(){
   Dropzone.autoDiscover = false;
   const dz = new Dropzone('#dzUpload', {
     url: '/admin/api/upload',
-    maxFilesize: 2048, // MB (ditentukan di server juga)
+    maxFilesize: 2048,
     acceptedFiles: '.mp4,.mov,.mkv',
     parallelUploads: 1,
     createImageThumbnails: false,
@@ -156,8 +189,9 @@ function initJobsPage(){
         const updated = new Date(j.updatedAt || j.createdAt).toLocaleString('id-ID');
         return [ j.video_id, j.type, j.status, (j.progress||0)+'%', updated ];
       });
-      if (datatable) { datatable.clear(); datatable.rows.add(rows).draw(); }
-      else {
+      if (datatable) {
+        datatable.clear(); datatable.rows.add(rows).draw();
+      } else {
         datatable = $table.DataTable({
           data: rows,
           columns: [
@@ -167,14 +201,14 @@ function initJobsPage(){
             { title: 'Progress' },
             { title: 'Updated' }
           ],
-          pageLength: 10
+          pageLength: 10,
+          responsive: true
         });
       }
     });
   }
   loadJobs();
 
-  // Realtime via socket
   socket.on('job:progress', ()=> loadJobs());
   socket.on('job:completed', ()=> loadJobs());
   socket.on('job:failed', ()=> loadJobs());
@@ -196,5 +230,19 @@ function initSettingsPage(){
   });
 }
 
-/* util */
-function escapeHtml(s){return (s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+/* ===== Utility ===== */
+function escapeHtml(s){
+  return (s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+/* Loader Style (append this CSS dynamically if missing) */
+if (!document.querySelector('#admin-loader-style')) {
+  const style = document.createElement('style');
+  style.id = 'admin-loader-style';
+  style.textContent = `
+  .loading-overlay {position:fixed;inset:0;background:rgba(0,0,0,.5);display:grid;place-items:center;z-index:2000;}
+  .spinner {width:40px;height:40px;border:4px solid rgba(255,255,255,.3);border-top-color:var(--admin-accent);border-radius:50%;animation:spin 0.8s linear infinite;}
+  @keyframes spin {to{transform:rotate(360deg);}}
+  `;
+  document.head.appendChild(style);
+}
