@@ -1,66 +1,84 @@
-<section class="page-videos">
-  <div class="page-header">
-    <h2><i class="fa-solid fa-photo-film"></i> Video Management</h2>
+<section class="videos-page fade-in">
+  <!-- HEADER -->
+  <div class="admin-header">
+    <h2 class="title">Video Management</h2>
     <button class="btn btn-primary glow" id="btnCreateVideo">
-      <i class="fa-solid fa-plus"></i> New Video
+      <i class="fa-solid fa-circle-plus"></i> Add New
     </button>
   </div>
 
-  <table id="tblVideos" class="display video-table" style="width:100%">
-    <thead>
-      <tr>
-        <th>Thumb</th>
-        <th>Title</th>
-        <th>Status</th>
-        <th>Views</th>
-        <th>Created</th>
-        <th style="width:180px;">Actions</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+  <!-- TABLE -->
+  <div class="admin-card">
+    <table id="tblVideos" class="display nowrap" style="width:100%">
+      <thead>
+        <tr>
+          <th>Thumb</th>
+          <th>Title</th>
+          <th>Status</th>
+          <th>Views</th>
+          <th>Created</th>
+          <th style="width:160px;">Actions</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div class="admin-note">
+    <p><b>Note:</b> Videos marked as <span class="text-accent">ready</span> are visible to users.</p>
+    <p>Click <b>Edit</b> to update metadata, or <b>Delete</b> to remove permanently.</p>
+  </div>
 </section>
 
-<!-- Modal -->
+<!-- MODAL CREATE / EDIT -->
 <div id="modalVideo" class="admin-modal" hidden>
-  <div class="admin-modal__body animate__animated animate__zoomIn">
-    <h3 id="modalTitle"><i class="fa-solid fa-pen"></i> Manage Video</h3>
+  <div class="admin-modal__body animate__animated animate__fadeInUp">
+    <div class="modal-header">
+      <h3 id="modalTitle"><i class="fa-solid fa-video"></i> Manage Video</h3>
+      <button type="button" class="close-modal" id="btnCloseModal">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
     <form id="formVideo">
       <input type="hidden" name="id" />
+
       <div class="row">
         <label>Title</label>
-        <input name="title" required />
+        <input name="title" required placeholder="Enter video title..." />
       </div>
+
       <div class="row">
         <label>Description</label>
-        <textarea name="description" rows="3"></textarea>
+        <textarea name="description" rows="3" placeholder="Short description..."></textarea>
       </div>
+
       <div class="row">
         <label>HLS Master URL</label>
         <input name="hls_master_url" placeholder="/hls/UUID/master.m3u8" />
       </div>
+
       <div class="row">
         <label>Thumbnail URL</label>
         <input name="thumbnail_url" placeholder="/storage/thumbs/UUID.jpg" />
       </div>
+
       <div class="row">
         <label>Status</label>
         <select name="status">
-          <option value="ready">Ready</option>
-          <option value="uploaded">Uploaded</option>
-          <option value="failed">Failed</option>
+          <option value="ready">ready</option>
+          <option value="uploaded">uploaded</option>
+          <option value="failed">failed</option>
         </select>
       </div>
+
       <div class="actions">
         <button type="button" class="btn btn-ghost" id="btnCancelModal">
-          <i class="fa-solid fa-xmark"></i> Cancel
+          <i class="fa-solid fa-ban"></i> Cancel
         </button>
         <button type="submit" class="btn btn-primary glow">
-          <i class="fa-solid fa-save"></i> Save
+          <i class="fa-solid fa-floppy-disk"></i> Save
         </button>
       </div>
     </form>
   </div>
 </div>
-
-<script>
