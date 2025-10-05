@@ -198,29 +198,37 @@ body.loaded{opacity:1}
 }
 @keyframes shimmer{0%{background-position:100% 0;}100%{background-position:0 0;}}
 
-/* === FOOTER (Fixed) === */
-.footer{
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  flex-wrap:wrap;
-  gap:10px;
-  padding:20px;
-  color:var(--muted);
-  font-size:14px;
-  border-top:1px solid rgba(255,255,255,.06);
-  background:rgba(0,0,0,.25);
-  margin-top:auto;
-  position:sticky;
-  bottom:0;
+/* === FOOTER (Fix selalu di bawah) === */
+.footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 18px;
+  color: var(--muted);
+  font-size: 14px;
+  border-top: 1px solid rgba(255,255,255,.06);
+  background: rgba(0,0,0,.4);
+  backdrop-filter: blur(12px);
+  z-index: 40;
 }
-.footer a{
-  color:var(--muted);
-  transition:var(--transition)
+.footer a {
+  color: var(--muted);
+  transition: var(--transition);
 }
-.footer a:hover{
-  color:var(--accent);
-  transform:translateY(-2px)
+.footer a:hover {
+  color: var(--accent);
+  transform: translateY(-2px);
+}
+
+/* Tambahkan padding-bottom di main agar konten tidak tertutup footer */
+main#app {
+  padding-bottom: 80px;
 }
 
 /* === RESPONSIVE === */
