@@ -1,5 +1,192 @@
-<section>
-  <h2 style="margin-bottom:14px;">Manual Upload</h2>
-  <form action="/admin/api/upload" class="dropzone" id="dzUpload"></form>
-  <p style="color:#9aa7b6;margin-top:8px;">Terima: .mp4, .mov, .mkv (maks 2GB)</p>
+<section class="upload-section animate__animated animate__fadeIn">
+  <div class="upload-header">
+    <h2 class="upload-title">📤 Manual Upload</h2>
+    <p class="upload-subtitle">Unggah video secara manual untuk diproses menjadi HLS streaming</p>
+  </div>
+
+  <form action="/admin/api/upload" class="dropzone" id="dzUpload">
+    <div class="dz-message">
+      <div class="dz-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+      <div class="dz-text">
+        <strong>Tarik & letakkan file di sini</strong><br>atau klik untuk memilih video
+      </div>
+      <small class="dz-hint">Format: .mp4, .mov, .mkv (maks 2GB)</small>
+    </div>
+  </form>
+
+  <!-- Progress container -->
+  <div id="uploadProgress" class="upload-progress" hidden>
+    <div class="progress-bar">
+      <div class="progress-inner"></div>
+    </div>
+    <div class="progress-info">
+      <span id="progressFilename">-</span>
+      <span id="progressPercent">0%</span>
+    </div>
+  </div>
 </section>
+
+<style>
+.upload-section {
+  background: rgba(255,255,255,.03);
+  border: 1px solid var(--admin-border);
+  border-radius: 16px;
+  padding: 30px;
+  box-shadow: 0 8px 25px rgba(0,0,0,.3);
+  transition: all .3s ease;
+}
+.upload-section:hover {
+  box-shadow: 0 12px 35px rgba(0,0,0,.45), 0 0 25px rgba(107,140,255,.15);
+}
+.upload-header {
+  text-align: center;
+  margin-bottom: 25px;
+}
+.upload-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: var(--admin-accent);
+}
+.upload-subtitle {
+  font-size: 14px;
+  color: var(--admin-muted);
+}
+.dropzone {
+  display: grid;
+  place-items: center;
+  min-height: 240px;
+  background: rgba(255,255,255,.04);
+  border: 2px dashed rgba(255,255,255,.2);
+  border-radius: 14px;
+  color: var(--admin-muted);
+  text-align: center;
+  transition: all .3s ease;
+  cursor: pointer;
+  overflow: hidden;
+  position: relative;
+}
+.dropzone:hover {
+  background: rgba(255,255,255,.07);
+  border-color: var(--admin-accent);
+  box-shadow: 0 0 20px rgba(107,226,255,.2);
+  color: #fff;
+}
+.dz-icon {
+  font-size: 48px;
+  color: var(--admin-primary);
+  margin-bottom: 10px;
+  animation: floatY 2s ease-in-out infinite;
+}
+.dz-text {
+  font-size: 16px;
+  line-height: 1.4;
+}
+.dz-hint {
+  display: block;
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--admin-muted);
+}
+@keyframes floatY {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+/* ===== Progress Bar ===== */
+.upload-progress {
+  margin-top: 24px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid var(--admin-border);
+  border-radius: 10px;
+  padding: 12px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: fadeIn .4s ease;
+}
+.progress-bar {
+  width: 100%;
+  height: 10px;
+  background: rgba(255,255,255,.08);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.progress-inner {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--admin-primary), var(--admin-accent));
+  background-size: 200% 100%;
+  animation: gradientMove 1.5s linear infinite;
+  border-radius: inherit;
+  transition: width .3s ease;
+}
+@keyframes gradientMove {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: var(--admin-muted);
+}
+.progress-info span {
+  user-select: none;
+}
+
+@keyframes fadeIn {
+  from {opacity: 0; transform: translateY(10px);}
+  to {opacity: 1; transform: translateY(0);}
+}
+
+@media (max-width:600px){
+  .upload-section { padding:20px; }
+  .upload-title { font-size:20px; }
+  .progress-info { font-size: 13px; }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  Dropzone.autoDiscover = false;
+  const dz = new Dropzone('#dzUpload', {
+    url: '/admin/api/upload',
+    maxFilesize: 2048,
+    acceptedFiles: '.mp4,.mov,.mkv',
+    parallelUploads: 1,
+    createImageThumbnails: false,
+    init: function(){
+      const bar = document.querySelector('.progress-inner');
+      const wrap = document.querySelector('#uploadProgress');
+      const name = document.querySelector('#progressFilename');
+      const percent = document.querySelector('#progressPercent');
+
+      this.on('addedfile', file=>{
+        wrap.hidden = false;
+        name.textContent = file.name;
+        percent.textContent = '0%';
+        bar.style.width = '0%';
+      });
+
+      this.on('uploadprogress', (file, progress)=>{
+        bar.style.width = progress.toFixed(0)+'%';
+        percent.textContent = progress.toFixed(0)+'%';
+      });
+
+      this.on('success', (file, res)=>{
+        bar.style.width = '100%';
+        percent.textContent = '100%';
+        setTimeout(()=>wrap.hidden=true, 1200);
+        if(res && res.ok) Swal.fire('Success','Upload diterima & sedang diproses','success');
+        else Swal.fire('Error', (res && res.error) || 'Gagal upload','error');
+      });
+
+      this.on('error', (file, msg)=>{
+        wrap.hidden = true;
+        Swal.fire('Error', msg, 'error');
+      });
+    }
+  });
+});
+</script>
