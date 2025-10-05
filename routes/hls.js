@@ -7,31 +7,26 @@ import { hlsGuard } from '../middleware/hlsGuard.js';
 const r = Router();
 
 /**
- * 🔐 HLS Protected Route
- * Contoh:
- *   /hls/12345/master.m3u8
- *   /hls/12345/720p_001.ts
- *   /hls/12345/thumb.jpg
+ * ✅ Versi kompatibel dengan Express 5 & path-to-regexp@6
+ * Contoh akses:
+ *   /hls/abc123/master.m3u8
+ *   /hls/abc123/720p_001.ts
  */
-r.get('/:videoId/:filename(*)', hlsGuard, async (req, res) => {
+r.get('/:videoId/:filename(.*)?', hlsGuard, async (req, res) => {
   try {
     const { videoId, filename } = req.params;
-    const safeFilename = filename || 'master.m3u8';
-    const filePath = path.join('storage/hls', videoId, safeFilename);
+    const targetFile = filename || 'master.m3u8';
+    const filePath = path.join('storage/hls', videoId, targetFile);
 
     if (!fs.existsSync(filePath)) {
       return res.status(404).send('Not found');
     }
 
-    // Deteksi MIME agar player tidak error
-    const contentType = mime.lookup(filePath) || 'application/octet-stream';
-    res.setHeader('Content-Type', contentType);
-
-    // Anti-cache & anti-sniff
+    // set MIME agar player HLS tidak error
+    res.setHeader('Content-Type', mime.lookup(filePath) || 'application/octet-stream');
     res.setHeader('Cache-Control', 'private, no-store');
     res.setHeader('X-Content-Type-Options', 'nosniff');
 
-    // Kirim file
     return res.sendFile(path.resolve(filePath));
   } catch (err) {
     console.error('[HLS Serve Error]', err);
