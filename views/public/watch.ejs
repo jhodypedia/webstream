@@ -1,58 +1,80 @@
-<section class="watch-wrap">
+<section class="watch-wrap fade-in">
+  <!-- 🎬 Player Section -->
   <div class="player-card">
     <div class="player-ratio">
-      <video id="player" playsinline controls preload="metadata" poster=""></video>
+      <video id="player" playsinline controls preload="metadata"
+        poster="<%= video.thumbnail_url || '/public/default-thumb.jpg' %>"></video>
       <div class="player-glow"></div>
     </div>
+
     <div class="meta">
       <h1 class="title"><%= video.title %></h1>
       <div class="stats">
-        <svg class="ico" viewBox="0 0 24 24"><path d="M3 12s3-6 9-6 9 6 9 6-3 6-9 6-9-6-9-6zm9-3a3 3 0 1 1 0 6 3 3 0 0 1 0-6z"/></svg>
+        <svg class="ico" viewBox="0 0 24 24">
+          <path d="M3 12s3-6 9-6 9 6 9 6-3 6-9 6-9-6-9-6zm9-3a3 3 0 1 1 0 6 3 3 0 0 1 0-6z"/>
+        </svg>
         <span id="views"><%= video.views %></span> views
         <span class="dot">•</span>
         <span><%= new Date(video.createdAt).toLocaleDateString('id-ID') %></span>
       </div>
+
+      <% if (video.description) { %>
+        <p class="desc"><%= video.description %></p>
+      <% } %>
     </div>
   </div>
 
-  <aside class="aside">
+  <!-- 📺 Rekomendasi -->
+  <aside class="aside slide-up">
     <h3>More like this</h3>
     <div id="reco" class="reco-grid">
-      <% for (let i=0;i<8;i++){ %><div class="card skeleton"></div><% } %>
+      <% for (let i=0; i<8; i++){ %>
+        <div class="card skeleton"></div>
+      <% } %>
     </div>
   </aside>
 </section>
 
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 <script>
 (function(){
-  const src = '<%= video.hls_master_url %>'; // /hls/:id/master.m3u8 (guarded)
+  const src = '<%= video.hls_master_url %>';
   const videoEl = document.getElementById('player');
-  if (Hls.isSupported()) {
+
+  // === HLS Playback ===
+  if (window.Hls && Hls.isSupported()) {
     const hls = new Hls({ maxBufferLength: 30 });
     hls.loadSource(src);
     hls.attachMedia(videoEl);
   } else if (videoEl.canPlayType('application/vnd.apple.mpegurl')) {
     videoEl.src = src;
   }
-  fetch('/api/videos/view/<%= video.id %>', { method: 'POST' })
+
+  // === View Counter ===
+  fetch('/api/videos/view/<%= video.id %>', { method:'POST' })
     .then(()=> {
       const el = document.getElementById('views');
       el.textContent = (parseInt(el.textContent||'0') + 1);
     });
 
-  fetch('/api/public/recommend/<%= video.id %>').then(r=>r.json()).then(d=>{
-    if(!d.ok) return;
-    const root = document.getElementById('reco');
-    root.innerHTML = '';
-    d.items.forEach(item=> root.appendChild(createCard(item)));
-  });
+  // === Recommendations ===
+  fetch('/api/public/recommend/<%= video.id %>')
+    .then(r=>r.json())
+    .then(d=>{
+      if(!d.ok) return;
+      const root = document.getElementById('reco');
+      root.innerHTML = '';
+      d.items.forEach(v=> root.appendChild(createCard(v)));
+    });
 
-  function createCard(v) {
+  // === Create Card ===
+  function createCard(v){
     const a = document.createElement('a');
     a.href = '/watch/'+v.slug;
-    a.className = 'card';
+    a.className = 'card fade-card';
     a.innerHTML = `
       <div class="thumb">
+        <img src="${v.thumbnail_url || '/public/default-thumb.jpg'}" alt="">
         <div class="thumb-overlay"></div>
         <div class="thumb-label">HD</div>
       </div>
@@ -62,6 +84,9 @@
       </div>`;
     return a;
   }
-  function escapeHtml(s){return (s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+
+  function escapeHtml(s){
+    return (s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
 })();
 </script>
