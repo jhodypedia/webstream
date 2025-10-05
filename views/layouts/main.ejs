@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <title><%= title || 'Pansa Streaming' %></title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/public/app.css" />
+</head>
+<body class="theme-dark">
+  <header class="topbar">
+    <a class="brand" href="/">
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v4H3zM3 10h18v9H3z"/></svg>
+      <span>Pansa<span class="accent">Stream</span></span>
+    </a>
+    <div class="searchbar">
+      <input id="q" type="search" placeholder="Search videos..." autocomplete="off"/>
+      <button id="btnSearch" aria-label="Search">
+        <svg class="ico" viewBox="0 0 24 24"><path d="M10 18a8 8 0 1 1 5.29-14.03L21 9.68l-1.41 1.41-5.7-5.7A6 6 0 1 0 10 16z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main id="app"><%- body %></main>
+
+  <footer class="footer">
+    <span>© <%= new Date().getFullYear() %> PansaStream</span>
+    <a href="/">Home</a>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <script src="/public/app.js"></script>
+</body>
+</html>
