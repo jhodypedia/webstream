@@ -12,7 +12,7 @@ import { sequelize } from './models/index.js';
 import publicRoutes from './routes/public.js';
 import apiRoutes from './routes/api.js';
 import hlsRoutes from './routes/hls.js';
-import adminRoutes from './routes/admin.js'; // 🆕 admin panel routes
+import adminRoutes from './routes/admin.js';
 
 dotenv.config();
 
@@ -34,6 +34,9 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(expressLayouts);
 
+// 🔹 Default layout publik
+app.set('layout', 'layouts/main');
+
 // ====== Session ======
 app.use(session({
   secret: process.env.SESSION_SECRET || 'pansa-stream-secret',
@@ -47,6 +50,14 @@ app.use((req, res, next) => {
   // bantu render user info di layout
   res.locals.session = req.session;
   res.locals.isAdmin = !!req.session.user;
+
+  // 🔹 Otomatis ganti layout jika route diawali '/admin'
+  if (req.originalUrl.startsWith('/admin')) {
+    app.set('layout', 'layouts/admin');
+  } else {
+    app.set('layout', 'layouts/main');
+  }
+
   next();
 });
 
@@ -54,14 +65,18 @@ app.use((req, res, next) => {
 app.use('/', publicRoutes);
 app.use('/api', apiRoutes);
 app.use('/hls', hlsRoutes);
-app.use('/admin', adminRoutes); // 🧩 admin routes (login, dashboard, settings, crud)
+app.use('/admin', adminRoutes);
 
 // ====== Error Handling ======
 app.use((req, res) => {
   if (req.originalUrl.startsWith('/api/')) {
     res.status(404).json({ ok: false, error: 'Not Found' });
   } else {
-    res.status(404).render('404', { title: 'Not Found', layout: 'layouts/main' });
+    const isAdmin = req.originalUrl.startsWith('/admin');
+    res.status(404).render('404', {
+      title: 'Not Found',
+      layout: isAdmin ? 'layouts/admin' : 'layouts/main'
+    });
   }
 });
 
@@ -70,11 +85,18 @@ app.use((err, req, res, next) => {
   if (req.originalUrl.startsWith('/api/')) {
     res.status(500).json({ ok: false, error: err.message });
   } else {
-    res.status(500).render('500', { title: 'Server Error', error: err.message, layout: 'layouts/main' });
+    const isAdmin = req.originalUrl.startsWith('/admin');
+    res.status(500).render('500', {
+      title: 'Server Error',
+      error: err.message,
+      layout: isAdmin ? 'layouts/admin' : 'layouts/main'
+    });
   }
 });
 
 // ====== Start Server ======
 const PORT = process.env.PORT || 3000;
-await sequelize.sync(); // dev only; prod pakai migration
-server.listen(PORT, () => console.log(`🚀 Server running: http://localhost:${PORT}`));
+await sequelize.sync(); // dev only
+server.listen(PORT, () =>
+  console.log(`🚀 Server running: http://localhost:${PORT}`)
+);
