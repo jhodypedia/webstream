@@ -1,26 +1,22 @@
-<section>
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+<section class="upload-section">
+  <div class="upload-header">
     <h2>Manual Upload</h2>
-    <a href="/admin/jobs" class="btn btn-ghost">Lihat Jobs</a>
+    <a href="/admin/jobs" class="btn btn-primary">
+      <i class="fa fa-list"></i> View Jobs
+    </a>
   </div>
 
-  <form action="/admin/api/upload" class="dropzone" id="dzUpload">
-    <div class="dz-message needsclick">
-      <i class="fa-solid fa-cloud-arrow-up" style="font-size:40px;color:var(--admin-accent);margin-bottom:10px;"></i><br>
-      Drop file di sini atau klik untuk memilih
+  <!-- Dropzone Upload -->
+  <form id="dzUpload" class="dropzone dz-theme" enctype="multipart/form-data">
+    <div class="dz-message">
+      <i class="fa fa-cloud-upload-alt"></i>
+      <h3>Drag & Drop or Click to Upload</h3>
+      <p>Accepted: <strong>.mp4, .mov, .mkv</strong> (max 2GB)</p>
     </div>
   </form>
 
-  <p style="color:#9aa7b6;margin-top:8px;">
-    Format diterima: <strong>.mp4, .mov, .mkv</strong> (maksimum 2GB)
-  </p>
-
-  <div style="margin-top:20px;">
-    <h4>Catatan:</h4>
-    <ul style="color:#9aa7b6;line-height:1.6;">
-      <li>File akan otomatis dikirim ke <code>transcode</code> queue untuk diproses.</li>
-      <li>Status proses dapat dilihat di tab <strong>Jobs</strong>.</li>
-      <li>Gunakan koneksi stabil untuk upload besar agar tidak gagal.</li>
-    </ul>
+  <div class="upload-note">
+    <p><strong>Note:</strong> File will be queued and transcoded automatically.  
+    You can monitor progress in <a href="/admin/jobs">Transcode Jobs</a>.</p>
   </div>
 </section>
