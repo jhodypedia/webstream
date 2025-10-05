@@ -143,30 +143,6 @@ function deleteVideo(id, onDone){
   });
 }
 
-/* === Upload Page === */
-function initUploadPage(){
-  if (Dropzone.forElement('#dzUpload')) return; // Prevent double init
-
-  Dropzone.autoDiscover = false;
-  const dz = new Dropzone('#dzUpload', {
-    url: '/admin/api/upload',
-    maxFilesize: 2048,
-    acceptedFiles: '.mp4,.mov,.mkv',
-    parallelUploads: 1,
-    createImageThumbnails: false,
-    init: function(){
-      this.on('success', (file, res)=>{
-        if(res && res.ok){
-          Swal.fire('Queued', 'Upload diterima dan diproses', 'success');
-        } else {
-          Swal.fire('Error', (res && res.error) || 'Failed', 'error');
-        }
-      });
-      this.on('error', (file, msg)=> Swal.fire('Error', msg, 'error'));
-    }
-  });
-}
-
 /* === Jobs Page === */
 function initJobsPage(){
   const $table = $('#tblJobs');
