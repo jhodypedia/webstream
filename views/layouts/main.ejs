@@ -4,31 +4,69 @@
   <meta charset="utf-8" />
   <title><%= title || 'Pansa Streaming' %></title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
+
+  <!-- CSS -->
   <link rel="stylesheet" href="/public/app.css" />
 </head>
-<body class="theme-dark">
-  <header class="topbar">
+<body class="theme-dark fade-body">
+
+  <!-- 🔹 TOPBAR -->
+  <header class="topbar" id="topbar">
     <a class="brand" href="/">
       <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v4H3zM3 10h18v9H3z"/></svg>
       <span>Pansa<span class="accent">Stream</span></span>
     </a>
+
     <div class="searchbar">
-      <input id="q" type="search" placeholder="Search videos..." autocomplete="off"/>
+      <input id="q" type="search" placeholder="Cari video..." autocomplete="off" />
       <button id="btnSearch" aria-label="Search">
         <svg class="ico" viewBox="0 0 24 24"><path d="M10 18a8 8 0 1 1 5.29-14.03L21 9.68l-1.41 1.41-5.7-5.7A6 6 0 1 0 10 16z"/></svg>
       </button>
     </div>
   </header>
 
-  <main id="app"><%- body %></main>
+  <!-- 🔹 MAIN CONTENT -->
+  <main id="app" class="main-content"><%- body %></main>
 
-  <footer class="footer">
-    <span>© <%= new Date().getFullYear() %> PansaStream</span>
-    <a href="/">Home</a>
+  <!-- 🔹 FOOTER -->
+  <footer class="footer glass-footer">
+    <div class="footer-inner">
+      <span>© <%= new Date().getFullYear() %> <b>PansaStream</b></span>
+      <a href="/">Home</a>
+      <a href="/about">About</a>
+      <a href="/terms">Terms</a>
+    </div>
   </footer>
 
+  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <script src="/public/app.js"></script>
+
+  <script>
+    // 🔸 Fade topbar on scroll (only for watch page)
+    const topbar=document.getElementById('topbar');
+    let lastY=0;
+    window.addEventListener('scroll',()=>{
+      const y=window.scrollY;
+      if(y>lastY && y>80){ topbar.classList.add('hide'); }
+      else{ topbar.classList.remove('hide'); }
+      lastY=y;
+    });
+
+    // 🔸 Search redirect
+    document.getElementById('btnSearch').onclick=()=>{
+      const q=document.getElementById('q').value.trim();
+      if(q) location.href=`/search?q=${encodeURIComponent(q)}`;
+    };
+
+    // Fade in animation
+    document.body.classList.add('loaded');
+  </script>
 </body>
 </html>
