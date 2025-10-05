@@ -10,6 +10,9 @@
         </button>
       </div>
 
+      <!-- Watermark -->
+      <div class="wm">PansaStream</div>
+
       <!-- Custom Controls -->
       <div class="controls" id="controls">
         <div class="progress-bar" id="progressBar">
@@ -99,8 +102,13 @@
   });
 
   fullscreenBtn.addEventListener('click', ()=>{
-    if (!document.fullscreenElement) video.parentElement.requestFullscreen();
-    else document.exitFullscreen();
+    if (video.requestFullscreen) {
+      video.requestFullscreen();
+    } else if (video.webkitEnterFullscreen) { // iOS Safari fix
+      video.webkitEnterFullscreen();
+    } else if (video.msRequestFullscreen) {
+      video.msRequestFullscreen();
+    }
   });
 
   let timer;
@@ -138,6 +146,7 @@
   transition:opacity .3s ease; background:rgba(0,0,0,.25);
 }
 .overlay.hide { opacity:0; pointer-events:none; }
+
 .play-btn {
   width:90px; height:90px; border-radius:50%; border:none; cursor:pointer;
   background:rgba(255,255,255,.2); color:#fff; backdrop-filter:blur(6px);
@@ -145,6 +154,15 @@
   transition:transform .25s ease, background .3s;
 }
 .play-btn:hover { transform:scale(1.1); background:rgba(255,255,255,.35); }
+
+/* Watermark */
+.wm {
+  position:absolute; bottom:10px; right:14px;
+  color:rgba(255,255,255,.7);
+  font-weight:600; font-size:13px;
+  text-shadow:0 0 8px rgba(0,0,0,.5);
+  user-select:none;
+}
 
 .controls {
   position:absolute; bottom:0; left:0; right:0;
@@ -160,7 +178,6 @@
 #progress {
   height:100%; width:0%; background:linear-gradient(90deg,var(--accent),var(--primary));
 }
-
 .buttons { display:flex; gap:10px; align-items:center; }
 .ctrl-btn {
   background:rgba(255,255,255,.12); border:none; border-radius:8px;
@@ -171,7 +188,6 @@ input[type=range] {
   accent-color:var(--accent);
   width:100px; cursor:pointer;
 }
-
 .meta {
   padding:10px 4px;
 }
