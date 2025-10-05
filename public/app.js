@@ -17,20 +17,23 @@
     });
   }
 
-  // =============== HOME: GRID & INFINITE SCROLL ===============
+  // =============== HOME PAGE ===============
   if (isHome) {
     const grid = document.getElementById('grid');
     const sentinel = document.getElementById('sentinel');
     const chips = document.querySelectorAll('.chip');
     const btnShuffle = document.getElementById('btnShuffle');
 
-    let page = 1, limit = 24, loading=false, done=false, currentQ = (new URLSearchParams(location.search).get('q')||'');
+    let page = 1, limit = 24, loading=false, done=false;
+    let currentQ = (new URLSearchParams(location.search).get('q')||'');
     if (currentQ) {
       document.getElementById('q').value = currentQ;
       chips.forEach(c=>c.classList.remove('is-active'));
     }
+
     loadPage();
 
+    // Infinite scroll
     const io = new IntersectionObserver((entries)=>{
       entries.forEach(e=>{
         if (e.isIntersecting && !loading && !done) loadPage();
@@ -38,6 +41,7 @@
     }, { rootMargin:'600px' });
     io.observe(sentinel);
 
+    // Filter chips
     chips.forEach(ch=>{
       ch.addEventListener('click', ()=>{
         chips.forEach(c=>c.classList.remove('is-active'));
@@ -45,17 +49,20 @@
         doResetAndSearch(ch.dataset.q||'');
       });
     });
+
+    // Shuffle button
     if (btnShuffle) {
       btnShuffle.addEventListener('click', ()=>{
         doResetAndSearch('');
-        // efek acak: scroll ke random setelah load batch
         setTimeout(()=> {
           const items = grid.querySelectorAll('.card');
-          if (items.length) items[Math.floor(Math.random()*items.length)].scrollIntoView({behavior:'smooth',block:'center'});
+          if (items.length) items[Math.floor(Math.random()*items.length)]
+            .scrollIntoView({behavior:'smooth',block:'center'});
         }, 800);
       });
     }
 
+    // === Functions ===
     function doResetAndSearch(q) {
       currentQ = q;
       page = 1; done = false;
@@ -64,9 +71,11 @@
       loadPage();
       history.replaceState(null,'','/?q='+encodeURIComponent(q));
     }
+
     function showSkeleton(on) {
-      sentinel.style.display = on ? 'block':'none';
+      sentinel.style.display = on ? 'block' : 'none';
     }
+
     async function loadPage() {
       loading = true;
       showSkeleton(true);
@@ -83,12 +92,14 @@
         console.error(e); done = true; showSkeleton(false);
       } finally { loading = false; }
     }
+
     function card(v) {
       const a = document.createElement('a');
       a.href = '/watch/'+v.slug;
-      a.className = 'card';
+      a.className = 'card fade-card';
       a.innerHTML = `
         <div class="thumb">
+          <img src="${v.thumbnail_url || '/public/default-thumb.jpg'}" alt="">
           <div class="thumb-overlay"></div>
           <div class="thumb-label">HD</div>
         </div>
@@ -96,17 +107,45 @@
           <h4 class="line-clamp-2">${escapeHtml(v.title)}</h4>
           <div class="mini"><span>${v.views} views</span></div>
         </div>`;
-      // micro-hover parallax
+
+      // Micro hover parallax
       a.addEventListener('mousemove', (e)=>{
         const r = a.getBoundingClientRect();
         const rx = (e.clientX - r.left)/r.width, ry=(e.clientY - r.top)/r.height;
-        a.style.transform = `translateY(-4px) scale(1.02) rotateX(${(ry-.5)*2}deg) rotateY(${(rx-.5)*-2}deg)`;
+        a.style.transform = `translateY(-4px) scale(1.03) rotateX(${(ry-.5)*2}deg) rotateY(${(rx-.5)*-2}deg)`;
       });
       a.addEventListener('mouseleave', ()=> a.style.transform='');
       return a;
     }
-    function escapeHtml(s){return (s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+
+    function escapeHtml(s){return (s||'').replace(/[&<>"']/g, m => (
+      {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]
+    ))}
   }
 
-  // =============== WATCH: sudah di page sendiri (lihat inline script) ===============
+  // =============== WATCH PAGE (handled inline) ===============
+  
+  // =============== UI Enhancements ===============
+  // Fade-in on scroll
+  const observer = new IntersectionObserver(entries=>{
+    entries.forEach(e=>{
+      if (e.isIntersecting) e.target.classList.add('visible');
+    });
+  }, {threshold:0.25});
+  document.querySelectorAll('.fade-up, .fade-card').forEach(el=>observer.observe(el));
+
+  // Topbar auto-hide on scroll
+  const topbar = document.getElementById('topbar');
+  if (topbar) {
+    let lastY = 0;
+    window.addEventListener('scroll', ()=>{
+      const y = window.scrollY;
+      if (y > lastY && y > 100) topbar.classList.add('hide');
+      else topbar.classList.remove('hide');
+      lastY = y;
+    });
+  }
+
+  // Fade body when loaded
+  document.body.classList.add('loaded');
 })();
