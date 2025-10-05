@@ -1,20 +1,20 @@
 <section class="hero">
   <div class="hero-bg"></div>
   <div class="hero-overlay"></div>
-  <div class="hero-content animate-fadein">
+  <div class="hero-content">
     <h1>Unlimited <span class="accent">Videos</span>, Anytime.</h1>
     <p>Nikmati streaming cepat, aman, dan bebas direct download.</p>
     <div class="hero-cta">
-      <a class="btn btn-primary pulse" href="#catalog">Browse Now</a>
-      <button class="btn btn-ghost" id="btnShuffle">🎲 Surprise me</button>
+      <a class="btn btn-primary" href="#catalog">Browse Now</a>
+      <button class="btn btn-ghost" id="btnShuffle">Surprise me</button>
     </div>
   </div>
 </section>
 
 <section id="catalog" class="catalog">
   <div class="row-title">
-    <h2 class="fade-up">Latest Uploads</h2>
-    <div class="chips fade-up">
+    <h2>Latest</h2>
+    <div class="chips">
       <button class="chip is-active" data-q="">All</button>
       <button class="chip" data-q="music">Music</button>
       <button class="chip" data-q="gaming">Gaming</button>
@@ -22,78 +22,14 @@
     </div>
   </div>
 
-  <div id="grid" class="grid fade-grid"></div>
+  <div id="grid" class="grid"></div>
 
+  <!-- Infinite Scroll Placeholder -->
   <div id="sentinel" class="sentinel">
     <div class="skeleton-wrap">
-      <% for (let i = 0; i < 12; i++) { %>
+      <% for (let i=0;i<12;i++){ %>
         <div class="card skeleton"></div>
       <% } %>
     </div>
   </div>
 </section>
-
-<script>
-(function(){
-  const grid = document.getElementById('grid');
-  const sentinel = document.getElementById('sentinel');
-  const chips = document.querySelectorAll('.chip');
-  let page = 1, q = '', loading = false, done = false;
-
-  function createCard(v) {
-    const a = document.createElement('a');
-    a.href = '/watch/' + v.slug;
-    a.className = 'card fade-card';
-    a.innerHTML = `
-      <div class="thumb">
-        <img src="${v.thumbnail_url || '/public/default-thumb.jpg'}" alt="">
-        <div class="thumb-overlay"></div>
-        <div class="thumb-label">HD</div>
-      </div>
-      <div class="card-meta">
-        <h4 class="line-clamp-2">${escapeHtml(v.title)}</h4>
-        <div class="mini">${v.views} views</div>
-      </div>`;
-    return a;
-  }
-  function escapeHtml(s){
-    return (s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-  }
-
-  async function load() {
-    if (loading || done) return;
-    loading = true;
-    const res = await fetch(`/api/public/videos?page=${page}&limit=24&q=${encodeURIComponent(q)}`);
-    const d = await res.json();
-    if (!d.ok) return;
-    if (d.items.length === 0) { done = true; sentinel.style.display='none'; return; }
-    d.items.forEach(v => grid.appendChild(createCard(v)));
-    page++; loading = false;
-  }
-
-  chips.forEach(chip=>{
-    chip.onclick=()=>{
-      chips.forEach(c=>c.classList.remove('is-active'));
-      chip.classList.add('is-active');
-      q = chip.dataset.q; page = 1; done = false;
-      grid.innerHTML=''; sentinel.style.display='block';
-      load();
-    };
-  });
-
-  const observer = new IntersectionObserver(entries=>{
-    if(entries[0].isIntersecting) load();
-  });
-  observer.observe(sentinel);
-
-  document.getElementById('btnShuffle').onclick=async()=>{
-    const r = await fetch('/api/public/videos?limit=50');
-    const d = await r.json();
-    if(!d.ok || !d.items.length) return;
-    const rand = d.items[Math.floor(Math.random()*d.items.length)];
-    location.href = '/watch/' + rand.slug;
-  };
-
-  load();
-})();
-</script>
