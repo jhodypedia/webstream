@@ -5,33 +5,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title><%= title || "Admin | PansaStream" %></title>
 
-  <!-- ===== Fonts & Base Styles ===== -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/public/app.css">
-  <link rel="stylesheet" href="/public/admin.css">
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
 
-  <!-- ===== CDN Plugins ===== -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.css" integrity="sha512-rr8tz2zJPiXqbyXKrc3kFMbzH0ZjvD5y3h9tR7OH/7XvuKMo5bGf0Jd8McbY6RJrEUY5ivp+4bbHd2+JmwrWaw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.12.3/dist/sweetalert2.min.css">
+  <!-- Base CSS -->
+  <link rel="stylesheet" href="/public/app.css" />
+  <link rel="stylesheet" href="/public/admin.css" />
 
-  <!-- FontAwesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-MYxQWGGD8kMJ1uY2T2tVuk1xkhpWb0IhZ0w0BxjUz1CzHW3o7s5q2gPgYyEmIs8vPvXLEA0DsflEoK95yZBbXA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <!-- Libraries -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" />
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/dropzone@5.9.3/dist/min/dropzone.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css" />
 </head>
 
 <body class="admin-theme">
   <div class="admin-layout">
-
-    <!-- ===== SIDEBAR ===== -->
+    <!-- Sidebar -->
     <aside class="sidebar">
       <div class="logo">
         <a href="/admin" class="brand">
-          <svg class="ico" viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
-            <path d="M3 5h18v4H3zM3 10h18v9H3z"/>
+          <svg class="ico" viewBox="0 0 24 24" width="22" height="22">
+            <path fill="currentColor" d="M3 5h18v4H3zM3 10h18v9H3z"/>
           </svg>
           <span>Pansa<span class="accent">Admin</span></span>
         </a>
-        <button class="toggle-btn"><i class="fa-solid fa-bars"></i></button>
+        <button class="toggle-btn"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
       <nav class="menu">
@@ -59,14 +58,14 @@
       </div>
     </aside>
 
-    <!-- ===== MAIN ===== -->
+    <!-- Main Content -->
     <div class="main">
       <header class="admin-topbar">
         <button class="toggle-sidebar"><i class="fa-solid fa-bars"></i></button>
         <div class="page-title"><%= title || '' %></div>
         <div class="admin-user">
           <i class="fa-solid fa-circle-user"></i>
-          <span><%= user ? (user.name || user.email) : 'Admin' %></span>
+          <span><%= user ? (user.name || user.email) : 'Administrator' %></span>
         </div>
       </header>
 
@@ -76,14 +75,35 @@
     </div>
   </div>
 
-  <!-- ===== JS CDN Plugins ===== -->
+  <!-- JS Libraries -->
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.12.3/dist/sweetalert2.all.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
   <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.js" integrity="sha512-7WiPCnlmWXX4t1geiDBeXb+4E+KrsFidPlfRynr8S88d9+5K3HBGYIraDSKX7cZfEpF1NFR2ovh5Yhr0A1xA5A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dropzone@5.9.3/dist/min/dropzone.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.5/dist/socket.io.min.js"></script>
 
-  <!-- ===== Admin Script ===== -->
+  <!-- Main Admin JS -->
   <script src="/public/admin.js"></script>
+
+  <!-- Sidebar Toggle Logic -->
+  <script>
+    $(function(){
+      const sidebar = document.querySelector('.sidebar');
+      const openBtn = document.querySelector('.toggle-sidebar');
+      const closeBtn = document.querySelector('.sidebar .toggle-btn');
+
+      if(openBtn) openBtn.addEventListener('click', ()=> sidebar.classList.add('open'));
+      if(closeBtn) closeBtn.addEventListener('click', ()=> sidebar.classList.remove('open'));
+
+      // close sidebar on mobile click outside
+      document.addEventListener('click', e=>{
+        if (window.innerWidth <= 1024 && sidebar.classList.contains('open')) {
+          if (!sidebar.contains(e.target) && !openBtn.contains(e.target)) {
+            sidebar.classList.remove('open');
+          }
+        }
+      });
+    });
+  </script>
 </body>
 </html>
