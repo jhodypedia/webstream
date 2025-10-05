@@ -2,24 +2,23 @@
   <div class="player-container">
     <div class="video-box">
       <video id="player" preload="metadata" playsinline></video>
-
-      <!-- Overlay -->
-      <div id="overlay" class="overlay">
-        <button id="playBtn" class="play-btn">
-          <svg viewBox="0 0 24 24"><path fill="white" d="M8 5v14l11-7z"/></svg>
-        </button>
+      <div class="overlay" id="overlay">
+        <button id="playBtn" class="play-btn"><i class="fa-solid fa-play"></i></button>
       </div>
 
-      <!-- Custom Controls -->
-      <div id="controls" class="controls hidden">
-        <div class="progress-bar"><div id="progress"></div></div>
-        <div class="buttons">
-          <button id="pauseBtn" class="ctrl-btn">
-            <svg viewBox="0 0 24 24"><path fill="white" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-          </button>
-          <button id="fullscreenBtn" class="ctrl-btn">
-            <svg viewBox="0 0 24 24"><path fill="white" d="M4 4h7v2H6v5H4V4zm10 0h6v7h-2V6h-4V4zM4 13h2v5h5v2H4v-7zm14 0h2v7h-7v-2h5v-5z"/></svg>
-          </button>
+      <div class="controls hidden" id="controls">
+        <div class="progress-bar" id="progressBar"><div id="progress"></div></div>
+        <div class="ctrl-row">
+          <div class="ctrl-left">
+            <button id="playCtrl" class="ctrl-btn"><i class="fa-solid fa-play"></i></button>
+            <div class="volume">
+              <i id="volIcon" class="fa-solid fa-volume-high"></i>
+              <input id="volume" type="range" min="0" max="1" step="0.05" value="1">
+            </div>
+          </div>
+          <div class="ctrl-right">
+            <button id="fullscreenBtn" class="ctrl-btn"><i class="fa-solid fa-expand"></i></button>
+          </div>
         </div>
       </div>
     </div>
@@ -27,71 +26,67 @@
     <div class="video-meta">
       <h1><%= video.title %></h1>
       <div class="meta-stats">
-        <span>👁️ <%= video.views %> views</span>
-        <span>•</span>
+        👁️ <span id="views"><%= video.views %></span> views •
         <span><%= new Date(video.createdAt).toLocaleDateString('id-ID') %></span>
       </div>
-      <% if (video.description) { %>
-        <p class="description"><%= video.description %></p>
-      <% } %>
+      <p class="description"><%= video.description %></p>
     </div>
   </div>
 </section>
 
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://kit.fontawesome.com/a2d9b09d5b.js" crossorigin="anonymous"></script>
 <script>
 (function(){
+  const v = document.getElementById('player'),
+        overlay = document.getElementById('overlay'),
+        playBtn = document.getElementById('playBtn'),
+        playCtrl = document.getElementById('playCtrl'),
+        volume = document.getElementById('volume'),
+        volIcon = document.getElementById('volIcon'),
+        fullscreen = document.getElementById('fullscreenBtn'),
+        progress = document.getElementById('progress'),
+        progressBar = document.getElementById('progressBar'),
+        controls = document.getElementById('controls');
+
   const src = '<%= video.hls_master_url %>';
-  const video = document.getElementById('player');
-  const overlay = document.getElementById('overlay');
-  const playBtn = document.getElementById('playBtn');
-  const pauseBtn = document.getElementById('pauseBtn');
-  const fullscreenBtn = document.getElementById('fullscreenBtn');
-  const controls = document.getElementById('controls');
-  const progress = document.getElementById('progress');
-  let hideTimeout;
+  if (Hls.isSupported()) { const h = new Hls(); h.loadSource(src); h.attachMedia(v); }
+  else if (v.canPlayType('application/vnd.apple.mpegurl')) v.src = src;
 
-  // HLS.js setup
-  if (Hls.isSupported()) {
-    const hls = new Hls({ maxBufferLength: 30 });
-    hls.loadSource(src);
-    hls.attachMedia(video);
-  } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-    video.src = src;
-  }
+  const togglePlay=()=>v.paused?v.play():v.pause();
+  [playBtn, playCtrl, overlay].forEach(el=>el.onclick=togglePlay);
 
-  // Controls visibility
-  function showControls() {
-    controls.classList.remove('hidden');
-    clearTimeout(hideTimeout);
-    hideTimeout = setTimeout(()=>controls.classList.add('hidden'), 2500);
-  }
+  v.addEventListener('play',()=>{playBtn.innerHTML=playCtrl.innerHTML='<i class="fa-solid fa-pause"></i>';overlay.classList.add('hide');});
+  v.addEventListener('pause',()=>{playBtn.innerHTML=playCtrl.innerHTML='<i class="fa-solid fa-play"></i>';overlay.classList.remove('hide');});
 
-  // Toggle play/pause
-  video.addEventListener('click', ()=>{
-    if(video.paused) { video.play(); overlay.classList.add('hide'); }
-    else { video.pause(); overlay.classList.remove('hide'); }
-    showControls();
+  volume.addEventListener('input',e=>{
+    v.volume=e.target.value;
+    volIcon.className = e.target.value==0 ? 'fa-solid fa-volume-xmark' :
+      (e.target.value<0.5?'fa-solid fa-volume-low':'fa-solid fa-volume-high');
   });
 
-  playBtn.onclick = ()=>{
-    overlay.classList.add('hide');
-    video.play();
-    showControls();
-  };
-  pauseBtn.onclick = ()=>{
-    video.pause();
-    overlay.classList.remove('hide');
-  };
-  fullscreenBtn.onclick = ()=>{
-    if (!document.fullscreenElement) video.requestFullscreen();
+  v.addEventListener('timeupdate',()=>{
+    progress.style.width = (v.currentTime/v.duration)*100+'%';
+  });
+  progressBar.addEventListener('click',e=>{
+    const r=progressBar.getBoundingClientRect();
+    v.currentTime=((e.clientX-r.left)/r.width)*v.duration;
+  });
+
+  fullscreen.onclick=()=>{
+    if(!document.fullscreenElement) v.parentElement.requestFullscreen();
     else document.exitFullscreen();
   };
-  video.addEventListener('timeupdate', ()=>{
-    progress.style.width = (video.currentTime / video.duration * 100) + '%';
-  });
-  document.addEventListener('mousemove', showControls);
 
-  // Count view
-  fetch('/api/videos/view/<%= video.id %>', { method:'POST' });
+  // Auto hide controls
+  let timer;
+  document.addEventListener('mousemove',()=>{
+    controls.classList.remove('hidden');
+    clearTimeout(timer);
+    timer=setTimeout(()=>controls.classList.add('hidden'),2500);
+  });
+
+  fetch('/api/videos/view/<%= video.id %>',{method:'POST'})
+    .then(()=>document.getElementById('views').textContent=parseInt(document.getElementById('views').textContent||0)+1);
 })();
 </script>
