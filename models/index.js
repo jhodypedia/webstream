@@ -1,14 +1,15 @@
-import { Sequelize } from 'sequelize';
-import dotenv from 'dotenv'; dotenv.config();
+import { sequelize } from './db.js';
+import { User } from './User.js';
+import { Video } from './Video.js';
+import { VideoVariant } from './VideoVariant.js';
+import { Job } from './Job.js';
 
-export const sequelize = new Sequelize(
-  process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASS,
-  { host: process.env.DB_HOST, dialect:'mysql', logging:false }
-);
+// 💡 Hubungan antar model
+Video.hasMany(VideoVariant, { foreignKey: 'video_id', onDelete: 'CASCADE' });
+VideoVariant.belongsTo(Video, { foreignKey: 'video_id' });
 
-export { User } from './User.js';
-export { Video } from './Video.js';
-export { VideoVariant } from './VideoVariant.js';
-export { Job } from './Job.js';
+Video.hasMany(Job, { foreignKey: 'video_id', onDelete: 'CASCADE' });
+Job.belongsTo(Video, { foreignKey: 'video_id' });
 
-// associations (optional minimal)
+// Export semua instance
+export { sequelize, User, Video, VideoVariant, Job };
