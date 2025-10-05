@@ -3,28 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title><%= title || "Admin | PansaStream" %></title>
+  <title><%= title || "Admin Panel" %></title>
   
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
-  <!-- <link rel="stylesheet" href="/public/app.css" /> -->
-  <link rel="stylesheet" href="/public/admin.css" />
-
-  <!-- ✅ CDN Stabil & Tanpa Integrity agar tidak diblok -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.12.3/dist/sweetalert2.min.css" />
+  <!-- FONT & STYLE -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/public/admin.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" referrerpolicy="no-referrer">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.12.3/dist/sweetalert2.min.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.css" referrerpolicy="no-referrer">
 </head>
 
 <body class="admin-theme">
   <div class="admin-layout">
-    <!-- Sidebar -->
+    <!-- SIDEBAR -->
     <aside class="sidebar">
       <div class="logo">
-        <a href="/admin" class="brand">
-          <i class="fa-solid fa-circle-nodes"></i>
-          <span>Pansa<span class="accent">Admin</span></span>
-        </a>
+        <a href="/admin" class="brand"><i class="fa-solid fa-circle-nodes"></i> Pansa<span class="accent">Admin</span></a>
         <button class="toggle-btn"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
@@ -41,12 +36,12 @@
       </div>
     </aside>
 
-    <!-- Main -->
+    <!-- MAIN -->
     <div class="main">
       <header class="admin-topbar">
         <button class="toggle-sidebar"><i class="fa-solid fa-bars"></i></button>
         <div class="page-title"><%= title || '' %></div>
-        <div class="admin-user"><i class="fa-solid fa-user-circle"></i> <span><%= user ? user.name : 'Administrator' %></span></div>
+        <div class="admin-user"><i class="fa-solid fa-user"></i> <%= user?.name || 'Administrator' %></div>
       </header>
 
       <main class="admin-body">
@@ -55,11 +50,11 @@
     </div>
   </div>
 
-  <!-- ===== JS ===== -->
+  <!-- JS ORDER: jQuery → SweetAlert → DataTables → Dropzone → Socket.IO → admin.js -->
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.12.3/dist/sweetalert2.all.min.js"></script>
   <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.js" referrerpolicy="no-referrer"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script src="/public/admin.js"></script>
 </body>
