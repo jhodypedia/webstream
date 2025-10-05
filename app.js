@@ -1,4 +1,6 @@
-// 📁 app.js
+// ================================
+// 📁 PansaStream - Main Server
+// ================================
 import express from 'express';
 import session from 'express-session';
 import path from 'path';
@@ -19,39 +21,52 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// =====================================
+// 🚀 INIT EXPRESS + SOCKET.IO
+// =====================================
 const app = express();
 const server = http.createServer(app);
 initIO(server);
 
-// ====== Middleware global ======
+// =====================================
+// ⚙️ MIDDLEWARES
+// =====================================
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use('/public', express.static(path.join(__dirname, 'public')));
 app.use('/storage', express.static(path.join(__dirname, 'storage'))); // ⚠️ dev only
 
-// ====== View Engine Setup ======
+// =====================================
+// 🎨 VIEW ENGINE SETUP
+// =====================================
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(expressLayouts);
 
-// 🔹 Default layout publik
-app.set('layout', 'layouts/main');
-
-// ====== Session ======
+// =====================================
+// 🧠 SESSION SETUP
+// =====================================
 app.use(session({
   secret: process.env.SESSION_SECRET || 'pansa-stream-secret',
   resave: false,
   saveUninitialized: false,
-  cookie: { maxAge: 7 * 24 * 60 * 60 * 1000 } // 7 hari
+  cookie: {
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 hari
+    sameSite: 'lax'
+  }
 }));
 
-// ====== Custom Middleware ======
+// =====================================
+// 🧩 GLOBAL HELPER MIDDLEWARE
+// =====================================
 app.use((req, res, next) => {
-  // bantu render user info di layout
   res.locals.session = req.session;
   res.locals.isAdmin = !!req.session.user;
 
-  // 🔹 Otomatis ganti layout jika route diawali '/admin'
+  // default variabel supaya tidak undefined di EJS
+  if (typeof res.locals.active === 'undefined') res.locals.active = '';
+
+  // auto switch layout sesuai path
   if (req.originalUrl.startsWith('/admin')) {
     app.set('layout', 'layouts/admin');
   } else {
@@ -61,42 +76,50 @@ app.use((req, res, next) => {
   next();
 });
 
-// ====== Routes ======
+// =====================================
+// 🛣️ ROUTES
+// =====================================
 app.use('/', publicRoutes);
 app.use('/api', apiRoutes);
 app.use('/hls', hlsRoutes);
 app.use('/admin', adminRoutes);
 
-// ====== Error Handling ======
+// =====================================
+// ❌ ERROR HANDLING
+// =====================================
+
+// 404 Not Found
 app.use((req, res) => {
   if (req.originalUrl.startsWith('/api/')) {
     res.status(404).json({ ok: false, error: 'Not Found' });
   } else {
-    const isAdmin = req.originalUrl.startsWith('/admin');
     res.status(404).render('404', {
-      title: 'Not Found',
-      layout: isAdmin ? 'layouts/admin' : 'layouts/main'
+      title: 'Page Not Found',
+      layout: req.originalUrl.startsWith('/admin') ? 'layouts/admin' : 'layouts/main'
     });
   }
 });
 
+// 500 Server Error
 app.use((err, req, res, next) => {
   console.error('[Server Error]', err);
   if (req.originalUrl.startsWith('/api/')) {
     res.status(500).json({ ok: false, error: err.message });
   } else {
-    const isAdmin = req.originalUrl.startsWith('/admin');
     res.status(500).render('500', {
       title: 'Server Error',
       error: err.message,
-      layout: isAdmin ? 'layouts/admin' : 'layouts/main'
+      layout: req.originalUrl.startsWith('/admin') ? 'layouts/admin' : 'layouts/main'
     });
   }
 });
 
-// ====== Start Server ======
+// =====================================
+// 🚀 START SERVER
+// =====================================
 const PORT = process.env.PORT || 3000;
-await sequelize.sync(); // dev only
-server.listen(PORT, () =>
-  console.log(`🚀 Server running: http://localhost:${PORT}`)
-);
+await sequelize.sync(); // gunakan migration di production
+
+server.listen(PORT, () => {
+  console.log(`🚀 PansaStream running on: http://localhost:${PORT}`);
+});
