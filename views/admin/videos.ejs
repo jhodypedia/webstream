@@ -3,6 +3,7 @@
     <h2>Videos</h2>
     <button class="btn btn-primary" id="btnCreateVideo">+ Create</button>
   </div>
+
   <table id="tblVideos" class="display" style="width:100%">
     <thead>
       <tr>
@@ -20,26 +21,59 @@
 
 <!-- Modal Create/Edit -->
 <div id="modalVideo" class="admin-modal" hidden>
-  <div class="admin-modal__body">
-    <h3 id="modalTitle">Create Video</h3>
+  <div class="admin-modal__body animate__animated animate__fadeInUp">
+    <h3 id="modalTitle" style="margin-bottom:10px;">Create Video</h3>
     <form id="formVideo">
       <input type="hidden" name="id" />
-      <div class="row"><label>Title</label><input name="title" required /></div>
-      <div class="row"><label>Description</label><textarea name="description" rows="3"></textarea></div>
-      <div class="row"><label>HLS Master URL</label><input name="hls_master_url" placeholder="/hls/UUID/master.m3u8" /></div>
-      <div class="row"><label>Thumbnail URL</label><input name="thumbnail_url" placeholder="/storage/thumbs/UUID.jpg" /></div>
+
+      <div class="row">
+        <label>Title</label>
+        <input name="title" required placeholder="Video title..." />
+      </div>
+
+      <div class="row">
+        <label>Description</label>
+        <textarea name="description" rows="3" placeholder="Short description..."></textarea>
+      </div>
+
+      <div class="row">
+        <label>HLS Master URL</label>
+        <input name="hls_master_url" placeholder="/hls/UUID/master.m3u8" />
+      </div>
+
+      <div class="row">
+        <label>Thumbnail URL</label>
+        <input name="thumbnail_url" placeholder="/storage/thumbs/UUID.jpg" />
+      </div>
+
       <div class="row">
         <label>Status</label>
         <select name="status">
-          <option value="ready">ready</option>
-          <option value="uploaded">uploaded</option>
-          <option value="failed">failed</option>
+          <option value="ready">Ready</option>
+          <option value="uploaded">Uploaded</option>
+          <option value="failed">Failed</option>
         </select>
       </div>
+
       <div class="actions">
-        <button type="button" class="btn btn-ghost" id="btnCancelModal">Cancel</button>
-        <button type="submit" class="btn btn-primary" id="btnSaveModal">Save</button>
+        <button type="button" class="btn btn-ghost" id="btnCancelModal">
+          <i class="fa-solid fa-xmark"></i> Cancel
+        </button>
+        <button type="submit" class="btn btn-primary" id="btnSaveModal">
+          <i class="fa-solid fa-floppy-disk"></i> Save
+        </button>
       </div>
     </form>
   </div>
 </div>
+
+<style>
+  /* Optional: smooth modal animation */
+  .admin-modal__body {
+    animation: slideUp 0.35s ease;
+  }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
