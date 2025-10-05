@@ -1,16 +1,54 @@
-<section>
-  <h2 style="margin-bottom:14px;">Manual Upload</h2>
+<section class="upload-section">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+    <h2>Manual Upload</h2>
+    <a href="/admin/jobs" class="btn btn-ghost">
+      <i class="fa-solid fa-list-check"></i> Lihat Jobs
+    </a>
+  </div>
 
-  <form action="/admin/api/upload" class="dropzone" id="dzUpload"></form>
+  <!-- Dropzone -->
+  <form action="/admin/api/upload" class="dropzone" id="dzUpload">
+    <div class="dz-message" data-dz-message>
+      <i class="fa-solid fa-cloud-arrow-up" style="font-size:40px;color:var(--admin-accent);margin-bottom:8px;"></i>
+      <p>Drop file di sini atau klik untuk memilih</p>
+      <small>Format: <strong>.mp4, .mov, .mkv</strong> &nbsp;|&nbsp; Maksimum <strong>2GB</strong></small>
+    </div>
+  </form>
 
-  <p style="color:#9aa7b6;margin-top:8px;">Format diterima: <b>.mp4, .mov, .mkv</b> (maksimal 2GB)</p>
-
-  <div style="margin-top:24px;">
-    <h4>Catatan:</h4>
-    <ul style="color:#9aa7b6;line-height:1.6;">
-      <li>File akan otomatis dikirim ke <code>transcode queue</code> untuk diproses.</li>
-      <li>Status dapat dilihat di tab <b>Jobs</b>.</li>
-      <li>Gunakan koneksi stabil untuk upload besar.</li>
+  <!-- Info -->
+  <div class="upload-info" style="margin-top:18px;color:var(--admin-muted);">
+    <h4 style="margin-bottom:6px;">Catatan:</h4>
+    <ul style="margin-left:18px;line-height:1.6;">
+      <li>File akan otomatis dikirim ke <code>transcode</code> queue untuk diproses.</li>
+      <li>Status proses dapat dilihat di tab <strong>Jobs</strong>.</li>
+      <li>Gunakan koneksi stabil untuk upload besar agar tidak gagal.</li>
     </ul>
   </div>
 </section>
+
+<script>
+  // Pastikan Dropzone belum terpasang dua kali
+  Dropzone.autoDiscover = false;
+  if (!window.__dzInitialized) {
+    window.__dzInitialized = true;
+    new Dropzone("#dzUpload", {
+      url: "/admin/api/upload",
+      maxFilesize: 2048, // MB
+      acceptedFiles: ".mp4,.mov,.mkv",
+      parallelUploads: 1,
+      createImageThumbnails: false,
+      addRemoveLinks: true,
+      dictRemoveFile: "Hapus",
+      init: function(){
+        this.on("success", (file, res) => {
+          if(res && res.ok){
+            Swal.fire("Queued", "Upload diterima & dikirim ke transcode queue", "success");
+          } else {
+            Swal.fire("Error", (res && res.error) || "Gagal upload", "error");
+          }
+        });
+        this.on("error", (file, msg) => Swal.fire("Error", msg, "error"));
+      }
+    });
+  }
+</script>
