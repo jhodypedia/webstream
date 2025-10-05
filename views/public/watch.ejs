@@ -1,14 +1,12 @@
 <section class="watch-page fade-in">
   <div class="player-container">
-    <!-- 🎥 Video Player -->
-    <div class="video-box" id="videoBox">
-      <video id="player" preload="metadata" playsinline></video>
+    <!-- Player -->
+    <div class="video-box">
+      <video id="player" playsinline preload="metadata"></video>
 
-      <!-- Overlay Play Button -->
+      <!-- Overlay -->
       <div class="overlay" id="overlay">
-        <button class="center-play" id="centerPlay">
-          <i class="fa-solid fa-play"></i>
-        </button>
+        <button id="playBtn" class="play-btn"><i class="fa-solid fa-play"></i></button>
       </div>
 
       <!-- Custom Controls -->
@@ -17,30 +15,25 @@
           <div id="progress"></div>
         </div>
         <div class="buttons">
-          <button class="ctrl-btn" id="rewind"><i class="fa-solid fa-backward"></i></button>
-          <button class="ctrl-btn" id="playPause"><i class="fa-solid fa-play"></i></button>
-          <button class="ctrl-btn" id="forward"><i class="fa-solid fa-forward"></i></button>
-          <div class="time-info">
-            <span id="currentTime">0:00</span> / <span id="duration">0:00</span>
+          <div class="left-controls">
+            <button id="playCtrl" class="ctrl-btn"><i class="fa-solid fa-play"></i></button>
+            <div class="volume">
+              <button id="volIcon" class="ctrl-btn"><i class="fa-solid fa-volume-high"></i></button>
+              <input id="volume" type="range" min="0" max="1" step="0.05" value="1">
+            </div>
           </div>
-          <div class="volume">
-            <i class="fa-solid fa-volume-high" id="volIcon"></i>
-            <input type="range" id="volume" min="0" max="1" step="0.05" value="1">
-          </div>
-          <button class="ctrl-btn" id="fullscreen"><i class="fa-solid fa-expand"></i></button>
+          <button id="fullscreenBtn" class="ctrl-btn"><i class="fa-solid fa-expand"></i></button>
         </div>
       </div>
-
-      <!-- Watermark -->
-      <div class="watermark">PansaStream</div>
     </div>
 
-    <!-- 📄 META -->
+    <!-- Meta -->
     <div class="video-meta">
       <h1><%= video.title %></h1>
       <div class="meta-stats">
-        <svg class="ico" viewBox="0 0 24 24"><path d="M3 12s3-6 9-6 9 6 9 6-3 6-9 6-9-6-9-6zm9-3a3 3 0 1 1 0 6 3 3 0 0 1 0-6z"/></svg>
-        <span id="views"><%= video.views %></span> views •
+        <svg class="ico" viewBox="0 0 24 24" width="16"><path fill="currentColor" d="M3 12s3-6 9-6 9 6 9 6-3 6-9 6-9-6-9-6zm9-3a3 3 0 1 1 0 6 3 3 0 0 1 0-6z"/></svg>
+        <span id="views"><%= video.views %></span> views
+        <span class="dot">•</span>
         <span><%= new Date(video.createdAt).toLocaleDateString('id-ID') %></span>
       </div>
       <% if (video.description) { %>
@@ -51,22 +44,18 @@
 </section>
 
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-<script src="https://kit.fontawesome.com/a2d9b09d5b.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js"></script>
 <script>
 (function(){
   const video = document.getElementById('player');
   const overlay = document.getElementById('overlay');
-  const centerPlay = document.getElementById('centerPlay');
-  const playPause = document.getElementById('playPause');
-  const rewind = document.getElementById('rewind');
-  const forward = document.getElementById('forward');
-  const fullscreen = document.getElementById('fullscreen');
-  const progressBar = document.getElementById('progressBar');
-  const progress = document.getElementById('progress');
-  const currentTimeEl = document.getElementById('currentTime');
-  const durationEl = document.getElementById('duration');
-  const volumeSlider = document.getElementById('volume');
+  const playBtn = document.getElementById('playBtn');
+  const playCtrl = document.getElementById('playCtrl');
   const volIcon = document.getElementById('volIcon');
+  const volume = document.getElementById('volume');
+  const fullscreenBtn = document.getElementById('fullscreenBtn');
+  const progress = document.getElementById('progress');
+  const progressBar = document.getElementById('progressBar');
   const controls = document.getElementById('controls');
 
   const src = '<%= video.hls_master_url %>';
@@ -78,128 +67,60 @@
     video.src = src;
   }
 
-  // Format time helper
-  const formatTime = (t)=>{
-    const m=Math.floor(t/60)||0, s=Math.floor(t%60)||0;
-    return `${m}:${s<10?'0'+s:s}`;
-  };
-
-  // Update duration
-  video.addEventListener('loadedmetadata', ()=>{
-    durationEl.textContent = formatTime(video.duration);
-  });
-
-  // Play/Pause toggle
   const togglePlay = ()=>{
     if(video.paused) video.play(); else video.pause();
   };
-  centerPlay.onclick = togglePlay;
-  playPause.onclick = togglePlay;
-  video.onclick = togglePlay;
 
-  video.addEventListener('play', ()=>{
-    centerPlay.innerHTML = '<i class="fa-solid fa-pause"></i>';
-    playPause.innerHTML = '<i class="fa-solid fa-pause"></i>';
-    overlay.style.opacity = 0;
+  video.addEventListener('play',()=>{
+    playBtn.innerHTML='<i class="fa-solid fa-pause"></i>';
+    playCtrl.innerHTML='<i class="fa-solid fa-pause"></i>';
+    overlay.classList.add('hide');
   });
-  video.addEventListener('pause', ()=>{
-    centerPlay.innerHTML = '<i class="fa-solid fa-play"></i>';
-    playPause.innerHTML = '<i class="fa-solid fa-play"></i>';
-    overlay.style.opacity = 1;
+  video.addEventListener('pause',()=>{
+    playBtn.innerHTML='<i class="fa-solid fa-play"></i>';
+    playCtrl.innerHTML='<i class="fa-solid fa-play"></i>';
+    overlay.classList.remove('hide');
   });
 
-  // Forward/Rewind
-  forward.onclick = ()=> video.currentTime += 10;
-  rewind.onclick = ()=> video.currentTime -= 10;
+  playBtn.onclick=togglePlay;
+  playCtrl.onclick=togglePlay;
 
-  // Progress update
-  video.addEventListener('timeupdate', ()=>{
-    const percent = (video.currentTime / video.duration) * 100;
-    progress.style.width = percent + '%';
-    currentTimeEl.textContent = formatTime(video.currentTime);
+  volIcon.addEventListener('click',()=>{
+    video.muted=!video.muted;
+    volIcon.className=video.muted?'fa-solid fa-volume-xmark':'fa-solid fa-volume-high';
   });
-  progressBar.onclick = e=>{
-    const rect = progressBar.getBoundingClientRect();
-    const pos = (e.clientX - rect.left)/rect.width;
-    video.currentTime = pos * video.duration;
-  };
 
-  // Volume
-  volumeSlider.addEventListener('input', e=>{
-    video.volume = e.target.value;
+  volume.addEventListener('input',e=>{
+    video.volume=e.target.value;
     if(video.volume===0) volIcon.className='fa-solid fa-volume-xmark';
     else if(video.volume<0.5) volIcon.className='fa-solid fa-volume-low';
     else volIcon.className='fa-solid fa-volume-high';
   });
 
-  // Fullscreen toggle
-  fullscreen.onclick = ()=>{
+  video.addEventListener('timeupdate',()=>{
+    const p=(video.currentTime/video.duration)*100;
+    progress.style.width=`${p}%`;
+  });
+
+  progressBar.addEventListener('click',e=>{
+    const rect=progressBar.getBoundingClientRect();
+    const pos=(e.clientX-rect.left)/rect.width;
+    video.currentTime=pos*video.duration;
+  });
+
+  fullscreenBtn.addEventListener('click',()=>{
     if(!document.fullscreenElement) video.parentElement.requestFullscreen();
     else document.exitFullscreen();
-  };
+  });
 
-  // Auto-hide controls
-  let hideTimer;
-  const showControls = ()=>{
+  let timer;
+  document.addEventListener('mousemove',()=>{
     controls.classList.remove('hidden');
-    clearTimeout(hideTimer);
-    hideTimer = setTimeout(()=>controls.classList.add('hidden'), 2500);
-  };
-  document.addEventListener('mousemove', showControls);
-  showControls();
+    clearTimeout(timer);
+    timer=setTimeout(()=>controls.classList.add('hidden'),3000);
+  });
 
-  // Increment views
-  fetch('/api/videos/view/<%= video.id %>', { method:'POST' })
-    .then(()=>{ 
-      const el=document.getElementById('views');
-      el.textContent = parseInt(el.textContent||'0') + 1;
-    });
+  fetch('/api/videos/view/<%= video.id %>',{method:'POST'})
+    .then(()=>{const el=document.getElementById('views');el.textContent=(parseInt(el.textContent||'0')+1);});
 })();
 </script>
-
-<style>
-/* ==== DoodStream-like Player ==== */
-.video-box { position:relative; aspect-ratio:16/9; background:#000; border-radius:14px; overflow:hidden; }
-.video-box video { width:100%; height:100%; object-fit:contain; background:#000; }
-
-.overlay {
-  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-  transition:opacity .3s ease;
-}
-.center-play {
-  width:80px; height:80px; border:none; border-radius:50%;
-  background:rgba(0,0,0,.5); color:#fff; font-size:26px;
-  display:flex; align-items:center; justify-content:center;
-  cursor:pointer; transition:transform .3s ease;
-}
-.center-play:hover { transform:scale(1.1); }
-
-.controls {
-  position:absolute; left:0; right:0; bottom:0;
-  padding:10px 16px 14px;
-  background:linear-gradient(180deg,transparent,rgba(0,0,0,.85));
-  color:#fff; opacity:1; transition:opacity .4s ease;
-}
-.controls.hidden { opacity:0; pointer-events:none; }
-
-.progress-bar { width:100%; height:5px; background:rgba(255,255,255,.2); border-radius:3px; overflow:hidden; margin-bottom:8px; cursor:pointer; }
-#progress { width:0%; height:100%; background:linear-gradient(90deg,var(--accent),var(--primary)); }
-
-.buttons { display:flex; align-items:center; gap:10px; }
-.ctrl-btn {
-  background:rgba(255,255,255,.1); border:none; border-radius:8px; padding:8px; cursor:pointer;
-  color:#fff; font-size:16px; transition:background .2s,transform .2s;
-}
-.ctrl-btn:hover { background:rgba(255,255,255,.3); transform:scale(1.1); }
-
-.volume { display:flex; align-items:center; gap:5px; margin-left:auto; }
-.volume input[type=range]{ width:80px; accent-color:var(--accent); cursor:pointer; }
-
-.time-info { font-size:13px; color:var(--muted); min-width:70px; }
-
-.watermark {
-  position:absolute; bottom:10px; right:14px;
-  font-size:13px; color:#fff; opacity:.35; letter-spacing:.5px;
-  font-weight:600; pointer-events:none;
-}
-</style>
