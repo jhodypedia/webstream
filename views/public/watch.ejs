@@ -2,28 +2,20 @@
   <div class="video-wrapper">
     <video id="video" playsinline preload="metadata"></video>
     <div class="spinner" id="spinner"></div>
+    <div class="watermark">Pansa<span>Stream</span></div>
 
     <!-- Controls -->
     <div class="player-controls" id="controls">
       <div class="ctrl-center">
-        <button class="ctrl-btn ctrl-skip" id="backward">
-          <i class="fa-solid fa-backward"></i><span>10</span>
-        </button>
-        <button class="ctrl-btn" id="playBtn">
-          <i class="fa-solid fa-play"></i>
-        </button>
-        <button class="ctrl-btn ctrl-skip" id="forward">
-          <span>10</span><i class="fa-solid fa-forward"></i>
-        </button>
+        <button class="ctrl-btn ctrl-skip" id="backward"><i class="fa-solid fa-backward"></i><span>10</span></button>
+        <button class="ctrl-btn" id="playBtn"><i class="fa-solid fa-play"></i></button>
+        <button class="ctrl-btn ctrl-skip" id="forward"><span>10</span><i class="fa-solid fa-forward"></i></button>
       </div>
 
       <div class="ctrl-bottom">
-        <div class="bottom-left">
-          <button class="ctrl-btn" id="pauseBtn"><i class="fa-solid fa-play"></i></button>
-          <div class="volume">
-            <i id="volIcon" class="fa-solid fa-volume-high"></i>
-            <input id="volume" type="range" min="0" max="1" step="0.05" value="1">
-          </div>
+        <div class="volume">
+          <i id="volIcon" class="fa-solid fa-volume-high"></i>
+          <input id="volume" type="range" min="0" max="1" step="0.05" value="1">
         </div>
         <button class="ctrl-btn" id="fullscreenBtn"><i class="fa-solid fa-expand"></i></button>
       </div>
@@ -42,84 +34,67 @@
   </div>
 </section>
 
-<footer class="footer">
-  © 2025 PansaStream <a href="/">Home</a>
-</footer>
+<footer class="footer">© 2025 PansaStream <a href="/">Home</a></footer>
 
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 <script src="https://kit.fontawesome.com/a2d9b09d5b.js" crossorigin="anonymous"></script>
 <script>
 (() => {
-  const video = document.getElementById('video');
-  const spinner = document.getElementById('spinner');
-  const controls = document.getElementById('controls');
-  const playBtn = document.getElementById('playBtn');
-  const pauseBtn = document.getElementById('pauseBtn');
-  const backward = document.getElementById('backward');
-  const forward = document.getElementById('forward');
-  const volume = document.getElementById('volume');
-  const volIcon = document.getElementById('volIcon');
-  const fullscreenBtn = document.getElementById('fullscreenBtn');
-  const progress = document.getElementById('progress');
-  const progressBar = document.getElementById('progressBar');
+  const video=document.getElementById('video');
+  const spinner=document.getElementById('spinner');
+  const controls=document.getElementById('controls');
+  const playBtn=document.getElementById('playBtn');
+  const backward=document.getElementById('backward');
+  const forward=document.getElementById('forward');
+  const volume=document.getElementById('volume');
+  const volIcon=document.getElementById('volIcon');
+  const fullscreenBtn=document.getElementById('fullscreenBtn');
+  const progress=document.getElementById('progress');
+  const progressBar=document.getElementById('progressBar');
+  const topbar=document.querySelector('.topbar');
   let hideTimer;
 
-  const src = '<%= video.hls_master_url %>';
-  if (Hls.isSupported()) {
-    const hls = new Hls();
-    hls.loadSource(src);
-    hls.attachMedia(video);
-  } else video.src = src;
+  const src='<%= video.hls_master_url %>';
+  if(Hls.isSupported()){const hls=new Hls();hls.loadSource(src);hls.attachMedia(video);}
+  else video.src=src;
 
-  const togglePlay = () => video.paused ? video.play() : video.pause();
-
-  video.addEventListener('waiting', ()=> spinner.style.display='block');
-  video.addEventListener('playing', ()=> spinner.style.display='none');
-  video.addEventListener('pause', ()=> spinner.style.display='none');
-
-  video.addEventListener('play', ()=>{
-    playBtn.innerHTML='<i class="fa-solid fa-pause"></i>';
-    pauseBtn.innerHTML='<i class="fa-solid fa-pause"></i>';
-  });
-  video.addEventListener('pause', ()=>{
-    playBtn.innerHTML='<i class="fa-solid fa-play"></i>';
-    pauseBtn.innerHTML='<i class="fa-solid fa-play"></i>';
-  });
-
-  playBtn.onclick=togglePlay;
-  pauseBtn.onclick=togglePlay;
+  playBtn.onclick=()=>video.paused?video.play():video.pause();
   backward.onclick=()=>video.currentTime-=10;
   forward.onclick=()=>video.currentTime+=10;
 
-  // Volume
-  volume.addEventListener('input', e=>{
+  video.addEventListener('waiting',()=>spinner.style.display='block');
+  video.addEventListener('playing',()=>spinner.style.display='none');
+  video.addEventListener('pause',()=>spinner.style.display='none');
+  video.addEventListener('play',()=>playBtn.innerHTML='<i class="fa-solid fa-pause"></i>');
+  video.addEventListener('pause',()=>playBtn.innerHTML='<i class="fa-solid fa-play"></i>');
+
+  volume.addEventListener('input',e=>{
     video.volume=e.target.value;
     volIcon.className=e.target.value==0?'fa-solid fa-volume-xmark':(e.target.value<0.5?'fa-solid fa-volume-low':'fa-solid fa-volume-high');
   });
 
-  // Progress
-  video.addEventListener('timeupdate', ()=>{
-    progress.style.width=(video.currentTime/video.duration*100)+'%';
-  });
-  progressBar.addEventListener('click', e=>{
+  video.addEventListener('timeupdate',()=>progress.style.width=(video.currentTime/video.duration*100)+'%');
+  progressBar.addEventListener('click',e=>{
     const rect=progressBar.getBoundingClientRect();
     const pos=(e.clientX-rect.left)/rect.width;
     video.currentTime=pos*video.duration;
   });
 
-  // Fullscreen
   fullscreenBtn.onclick=()=>!document.fullscreenElement?video.requestFullscreen():document.exitFullscreen();
 
-  // Auto hide controls
-  const showControls=()=>{
+  // Auto hide topbar and controls
+  const showUI=()=>{
     controls.classList.remove('hide');
+    topbar.classList.remove('hide');
     clearTimeout(hideTimer);
-    hideTimer=setTimeout(()=>controls.classList.add('hide'),2500);
+    hideTimer=setTimeout(()=>{
+      controls.classList.add('hide');
+      topbar.classList.add('hide');
+    },2500);
   };
-  document.addEventListener('mousemove',showControls);
-  document.addEventListener('touchstart',showControls);
+  document.addEventListener('mousemove',showUI);
+  document.addEventListener('touchstart',showUI);
 
-  // Views
   fetch('/api/videos/view/<%= video.id %>',{method:'POST'});
 })();
 </script>
