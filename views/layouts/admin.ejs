@@ -10,7 +10,36 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.12.3/dist/sweetalert2.min.css">
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
   <link rel="stylesheet" href="/public/dropzone.min.css" />
+  <style>
+    /* Sidebar responsive toggle */
+    .toggle-sidebar {
+      display:none;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.1);
+      border-radius:10px;
+      padding:8px 12px;
+      color:#fff;
+      cursor:pointer;
+      transition:background .3s,transform .3s;
+    }
+    .toggle-sidebar:hover { background:rgba(255,255,255,.15); transform:scale(1.05);}
+    @media(max-width:920px){
+      .sidebar{
+        position:fixed;left:-260px;top:0;bottom:0;width:240px;
+        transition:all .4s cubic-bezier(.3,.7,.3,1);
+        z-index:999;background:rgba(10,15,25,.95);
+      }
+      .sidebar.open{left:0;}
+      .main{width:100%;}
+      .admin-topbar{position:sticky;top:0;z-index:50;background:rgba(15,20,30,.9);}
+      .toggle-sidebar{display:inline-flex;align-items:center;gap:6px;}
+    }
+    .sidebar::after{content:"";position:absolute;inset:0;pointer-events:none;box-shadow:inset -10px 0 20px rgba(0,0,0,.4);}
+    .sidebar .menu-item span{transition:opacity .3s ease;}
+    .sidebar.collapsed .menu-item span{opacity:0;pointer-events:none;}
+  </style>
 </head>
+
 <body class="admin-theme">
   <div class="admin-layout">
     <aside class="sidebar">
@@ -46,12 +75,16 @@
 
     <div class="main">
       <header class="admin-topbar">
-        <div class="page-title"><%= title || '' %></div>
+        <div class="left">
+          <button class="toggle-sidebar"><i class="fa-solid fa-bars"></i></button>
+          <div class="page-title"><%= title || '' %></div>
+        </div>
         <div class="admin-user">
           <i class="fa-solid fa-circle-user"></i>
           <span><%= user ? (user.name || user.email) : 'Admin' %></span>
         </div>
       </header>
+
       <main class="admin-body">
         <%- body %>
       </main>
