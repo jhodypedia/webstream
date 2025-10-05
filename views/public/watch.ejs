@@ -1,0 +1,67 @@
+<section class="watch-wrap">
+  <div class="player-card">
+    <div class="player-ratio">
+      <video id="player" playsinline controls preload="metadata" poster=""></video>
+      <div class="player-glow"></div>
+    </div>
+    <div class="meta">
+      <h1 class="title"><%= video.title %></h1>
+      <div class="stats">
+        <svg class="ico" viewBox="0 0 24 24"><path d="M3 12s3-6 9-6 9 6 9 6-3 6-9 6-9-6-9-6zm9-3a3 3 0 1 1 0 6 3 3 0 0 1 0-6z"/></svg>
+        <span id="views"><%= video.views %></span> views
+        <span class="dot">•</span>
+        <span><%= new Date(video.createdAt).toLocaleDateString('id-ID') %></span>
+      </div>
+    </div>
+  </div>
+
+  <aside class="aside">
+    <h3>More like this</h3>
+    <div id="reco" class="reco-grid">
+      <% for (let i=0;i<8;i++){ %><div class="card skeleton"></div><% } %>
+    </div>
+  </aside>
+</section>
+
+<script>
+(function(){
+  const src = '<%= video.hls_master_url %>'; // /hls/:id/master.m3u8 (guarded)
+  const videoEl = document.getElementById('player');
+  if (Hls.isSupported()) {
+    const hls = new Hls({ maxBufferLength: 30 });
+    hls.loadSource(src);
+    hls.attachMedia(videoEl);
+  } else if (videoEl.canPlayType('application/vnd.apple.mpegurl')) {
+    videoEl.src = src;
+  }
+  fetch('/api/videos/view/<%= video.id %>', { method: 'POST' })
+    .then(()=> {
+      const el = document.getElementById('views');
+      el.textContent = (parseInt(el.textContent||'0') + 1);
+    });
+
+  fetch('/api/public/recommend/<%= video.id %>').then(r=>r.json()).then(d=>{
+    if(!d.ok) return;
+    const root = document.getElementById('reco');
+    root.innerHTML = '';
+    d.items.forEach(item=> root.appendChild(createCard(item)));
+  });
+
+  function createCard(v) {
+    const a = document.createElement('a');
+    a.href = '/watch/'+v.slug;
+    a.className = 'card';
+    a.innerHTML = `
+      <div class="thumb">
+        <div class="thumb-overlay"></div>
+        <div class="thumb-label">HD</div>
+      </div>
+      <div class="card-meta">
+        <h4 class="line-clamp-2">${escapeHtml(v.title)}</h4>
+        <div class="mini"><span>${v.views} views</span></div>
+      </div>`;
+    return a;
+  }
+  function escapeHtml(s){return (s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+})();
+</script>
