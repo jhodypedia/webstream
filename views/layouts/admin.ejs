@@ -4,70 +4,47 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title><%= title || "Admin | PansaStream" %></title>
+
+  <!-- Fonts & Base Styles -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/public/app.css" />
   <link rel="stylesheet" href="/public/admin.css" />
+
+  <!-- Vendor Libraries -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.12.3/dist/sweetalert2.min.css">
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-  <link rel="stylesheet" href="/public/dropzone.min.css" />
-  <style>
-    /* === Sidebar & Responsive === */
-    .toggle-sidebar {
-      display:none; background:rgba(255,255,255,.05);
-      border:1px solid rgba(255,255,255,.1);
-      border-radius:10px; padding:8px 12px; color:#fff;
-      cursor:pointer; transition:background .3s,transform .3s;
-      font-size:18px;
-    }
-    .toggle-sidebar:hover { background:rgba(255,255,255,.15); transform:scale(1.1);}
-    @media(max-width:920px){
-      .sidebar{
-        position:fixed; left:-260px; top:0; bottom:0; width:240px;
-        transition:left .35s cubic-bezier(.4,.1,.2,1);
-        z-index:1001; background:rgba(10,15,25,.97);
-        backdrop-filter:blur(18px); box-shadow:4px 0 20px rgba(0,0,0,.6);
-      }
-      .sidebar.open{ left:0; }
-      .main{ width:100%; }
-      .admin-topbar{ position:sticky; top:0; z-index:50; background:rgba(15,20,30,.9); }
-      .toggle-sidebar{ display:inline-flex; align-items:center; gap:6px; margin-right:12px; }
-      /* overlay hit area */
-      #sidebarOverlay{
-        display:none; position:fixed; inset:0;
-        background:rgba(0,0,0,.55); backdrop-filter:blur(4px);
-        z-index:1000; opacity:0; transition:opacity .3s;
-      }
-      #sidebarOverlay.active{ display:block; opacity:1; }
-    }
-  </style>
+  <link rel="stylesheet" href="https://unpkg.com/dropzone@5/dist/min/dropzone.min.css" />
+
+  <!-- Icons -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/js/all.min.js" crossorigin="anonymous"></script>
 </head>
-
 <body class="admin-theme">
-  <!-- overlay untuk klik luar -->
-  <div id="sidebarOverlay"></div>
-
   <div class="admin-layout">
+    <!-- SIDEBAR -->
     <aside class="sidebar" id="sidebar">
       <div class="logo">
         <a href="/admin" class="brand">
-          <svg class="ico" viewBox="0 0 24 24"><path d="M3 5h18v4H3zM3 10h18v9H3z"/></svg>
+          <svg class="ico" viewBox="0 0 24 24" width="24" height="24" fill="#6be2ff">
+            <path d="M3 5h18v4H3zM3 10h18v9H3z"/>
+          </svg>
           <span>Pansa<span class="accent">Admin</span></span>
         </a>
       </div>
+      <% const current = active || ''; %>
       <nav class="menu">
-        <a href="/admin" class="menu-item <%= (active==='dashboard'?'active':'') %>">
+        <a href="/admin" class="menu-item <%= current==='dashboard'?'active':'' %>">
           <i class="fa-solid fa-gauge-high"></i> <span>Dashboard</span>
         </a>
-        <a href="/admin/upload" class="menu-item <%= (active==='upload'?'active':'') %>">
+        <a href="/admin/upload" class="menu-item <%= current==='upload'?'active':'' %>">
           <i class="fa-solid fa-upload"></i> <span>Upload</span>
         </a>
-        <a href="/admin/videos" class="menu-item <%= (active==='videos'?'active':'') %>">
+        <a href="/admin/videos" class="menu-item <%= current==='videos'?'active':'' %>">
           <i class="fa-solid fa-photo-film"></i> <span>Videos</span>
         </a>
-        <a href="/admin/jobs" class="menu-item <%= (active==='jobs'?'active':'') %>">
+        <a href="/admin/jobs" class="menu-item <%= current==='jobs'?'active':'' %>">
           <i class="fa-solid fa-list-check"></i> <span>Jobs</span>
         </a>
-        <a href="/admin/settings" class="menu-item <%= (active==='settings'?'active':'') %>">
+        <a href="/admin/settings" class="menu-item <%= current==='settings'?'active':'' %>">
           <i class="fa-solid fa-gear"></i> <span>Settings</span>
         </a>
       </nav>
@@ -78,14 +55,13 @@
       </div>
     </aside>
 
+    <!-- MAIN CONTENT -->
     <div class="main">
       <header class="admin-topbar">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <button id="btnToggleSidebar" class="toggle-sidebar">
-            <i class="fa-solid fa-bars"></i>
-          </button>
-          <div class="page-title"><%= title || '' %></div>
-        </div>
+        <button id="sidebarToggle" class="sidebar-toggle" aria-label="Toggle Sidebar">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+        <div class="page-title"><%= title || '' %></div>
         <div class="admin-user">
           <i class="fa-solid fa-circle-user"></i>
           <span><%= user ? (user.name || user.email) : 'Administrator' %></span>
@@ -98,33 +74,38 @@
     </div>
   </div>
 
+  <!-- JS Libraries -->
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.12.3/dist/sweetalert2.all.min.js"></script>
   <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-  <script src="https://kit.fontawesome.com/a2d9b09d5b.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script>
   <script src="/socket.io/socket.io.js"></script>
-  <script src="/public/dropzone.min.js"></script>
   <script src="/public/admin.js"></script>
+
+  <!-- Sidebar Toggle Logic -->
   <script>
-    const sidebar = document.getElementById('sidebar');
-    const toggleBtn = document.getElementById('btnToggleSidebar');
-    const overlay = document.getElementById('sidebarOverlay');
+    document.addEventListener('DOMContentLoaded', () => {
+      const sidebar = document.getElementById('sidebar');
+      const toggleBtn = document.getElementById('sidebarToggle');
 
-    function toggleSidebar(open){
-      const isOpen = open ?? !sidebar.classList.contains('open');
-      if(isOpen){
-        sidebar.classList.add('open');
-        overlay.classList.add('active');
-        document.body.style.overflow='hidden';
-      } else {
-        sidebar.classList.remove('open');
-        overlay.classList.remove('active');
-        document.body.style.overflow='';
+      toggleBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('collapsed');
+        localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+      });
+
+      // Restore previous state
+      if (localStorage.getItem('sidebarCollapsed') === 'true') {
+        sidebar.classList.add('collapsed');
       }
-    }
 
-    toggleBtn.addEventListener('click', ()=> toggleSidebar());
-    overlay.addEventListener('click', ()=> toggleSidebar(false));
+      // Close sidebar on mobile click outside
+      document.addEventListener('click', e => {
+        if (window.innerWidth <= 768 && sidebar.classList.contains('collapsed') === false) {
+          const withinSidebar = e.target.closest('.sidebar, #sidebarToggle');
+          if (!withinSidebar) sidebar.classList.add('collapsed');
+        }
+      });
+    });
   </script>
 </body>
 </html>
