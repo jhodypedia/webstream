@@ -17,7 +17,8 @@ async function ffmpeg(args=[]) {
   });
 }
 
-new Worker('transcode:video', async job => {
+// ✅ Nama queue sama dengan queue.js: 'transcode_video'
+new Worker('transcode_video', async job => {
   const { videoId } = job.data;
   const rec = await Video.findByPk(videoId);
   if (!rec) return;
@@ -28,7 +29,7 @@ new Worker('transcode:video', async job => {
 
   await Job.update({ status:'running', progress:10 }, { where:{ video_id:videoId }});
 
-  // Satu profil 720p (bisa tambah 1080p/480p)
+  // Transcode ke HLS
   await ffmpeg([
     '-y','-i', rawPath,
     '-preset','veryfast','-profile:v','main',
@@ -48,24 +49,19 @@ new Worker('transcode:video', async job => {
     await putFile(`${videoId}/${f}`, path.join(outDirLocal, f));
   }
 
-  // Simpan variant
   const baseUrl = (process.env.STORAGE_PROVIDER==='local')
     ? `/storage/hls/${videoId}`
     : `${process.env.S3_ENDPOINT}/${process.env.S3_BUCKET}/${videoId}`;
 
   await VideoVariant.create({ video_id: videoId, label:'720p', bandwidth:2500000, hls_url:`${baseUrl}/720p.m3u8` });
 
-  // Generate key unik
   const key = randomBytes(12).toString('hex');
-
   await Video.update({
     status:'ready',
-    hls_master_url: `/hls/${videoId}/master.m3u8`, // lewat guard route!
+    hls_master_url: `/hls/${videoId}/master.m3u8`,
     key_access: key
   }, { where:{ id: videoId }});
 
   await Job.update({ status:'done', progress:100 }, { where:{ video_id:videoId }});
-
-  // Bersih tmp
   try { await fs.promises.rm(outDirLocal, { recursive:true, force:true }); } catch{}
 }, { connection: { url: process.env.REDIS_URL }});
