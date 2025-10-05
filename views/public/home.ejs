@@ -1,0 +1,33 @@
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <h1>Unlimited <span class="accent">Videos</span>, Anytime.</h1>
+    <p>Nikmati streaming cepat, aman, dan bebas direct download.</p>
+    <div class="hero-cta">
+      <a class="btn btn-primary" href="#catalog">Browse Now</a>
+      <button class="btn btn-ghost" id="btnShuffle">Surprise me</button>
+    </div>
+  </div>
+</section>
+
+<section id="catalog" class="catalog">
+  <div class="row-title">
+    <h2>Latest</h2>
+    <div class="chips">
+      <button class="chip is-active" data-q="">All</button>
+      <button class="chip" data-q="music">Music</button>
+      <button class="chip" data-q="gaming">Gaming</button>
+      <button class="chip" data-q="review">Review</button>
+    </div>
+  </div>
+
+  <div id="grid" class="grid"></div>
+  <div id="sentinel" class="sentinel">
+    <div class="skeleton-wrap">
+      <% for (let i=0;i<12;i++){ %>
+        <div class="card skeleton"></div>
+      <% } %>
+    </div>
+  </div>
+</section>
