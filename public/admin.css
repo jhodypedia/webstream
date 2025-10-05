@@ -226,4 +226,121 @@ table.dataTable tbody td {
   .btn { padding: 8px 12px; font-size: 14px; }
   table.dataTable thead th, table.dataTable tbody td { font-size: 13px; }
   .admin-modal__body { width: 100%; padding: 18px; }
+
+
+  /* ===== UPLOAD SECTION ===== */
+.upload-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: var(--admin-card);
+  border: 1px solid var(--admin-border);
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: 0 10px 25px rgba(0,0,0,.4);
+  animation: fadeIn .5s ease;
+}
+
+.upload-section h2 {
+  margin: 0;
+  font-size: 20px;
+  color: var(--admin-accent);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.upload-section p {
+  color: var(--admin-muted);
+  font-size: 14px;
+  margin-top: -4px;
+}
+
+.dropzone {
+  border: 2px dashed rgba(255,255,255,.2);
+  background: rgba(255,255,255,.04);
+  border-radius: 16px;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--admin-muted);
+  transition: all .3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.dropzone:hover {
+  background: rgba(255,255,255,.08);
+  border-color: var(--admin-accent);
+  box-shadow: 0 0 25px rgba(107,226,255,.25);
+}
+
+.dropzone .dz-message {
+  font-size: 16px;
+  color: var(--admin-text);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dropzone .dz-message::before {
+  content: "📤";
+  font-size: 42px;
+  opacity: 0.8;
+  animation: floatIcon 2.5s ease-in-out infinite;
+}
+
+@keyframes floatIcon {
+  0%, 100% { transform: translateY(0); opacity: 0.9; }
+  50% { transform: translateY(-6px); opacity: 1; }
+}
+
+/* Progress & file previews */
+.dz-preview {
+  margin: 12px;
+  background: rgba(255,255,255,.05);
+  border-radius: 10px;
+  border: 1px solid var(--admin-border);
+  padding: 10px;
+  color: var(--admin-text);
+  box-shadow: 0 6px 20px rgba(0,0,0,.4);
+  animation: fadeIn .4s ease;
+}
+.dz-progress {
+  background: rgba(255,255,255,.15);
+  height: 6px;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.dz-upload {
+  background: linear-gradient(90deg,var(--admin-accent),var(--admin-primary));
+  height: 100%;
+  transition: width .4s ease;
+}
+.dz-error-message {
+  color: #ff7b7b;
+  font-size: 13px;
+  margin-top: 6px;
+}
+.dz-success-mark svg, .dz-error-mark svg {
+  display: none;
+}
+
+/* ===== UPLOAD NOTES ===== */
+.upload-notes {
+  font-size: 13px;
+  color: var(--admin-muted);
+  margin-top: 12px;
+}
+.upload-notes ul {
+  padding-left: 18px;
+  margin: 4px 0 0;
+}
+.upload-notes li {
+  margin-bottom: 4px;
+  list-style: disc;
+}
 }
