@@ -1,0 +1,26 @@
+{
+  "name": "pansa-stream",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node app.js",
+    "worker": "node worker/transcode.js",
+    "bot": "node bot/index.js"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.676.0",
+    "bullmq": "^5.7.9",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-ejs-layouts": "^2.5.1",
+    "express-session": "^1.18.0",
+    "hls.js": "^1.5.16",
+    "mime-types": "^2.1.35",
+    "mysql2": "^3.11.0",
+    "node-fetch": "^3.3.2",
+    "sequelize": "^6.37.3",
+    "socket.io": "^4.7.5",
+    "telegraf": "^4.16.3",
+    "uuid": "^9.0.1"
+  }
+}
