@@ -1,50 +1,92 @@
-// 📁 public/admin.js
-const socket = io(); // realtime jobs/dashboard
+// ==========================
+// 📡 SOCKET.IO REALTIME
+// ==========================
+const socket = io();
 
+// ==========================
+// 📱 ON DOCUMENT READY
+// ==========================
 $(function(){
-  /* === Sidebar toggle === */
   const sidebar = document.querySelector('.sidebar');
   const toggleBtns = document.querySelectorAll('.toggle-sidebar, .sidebar .toggle-btn');
-  toggleBtns.forEach(btn => {
-    btn.addEventListener('click', () => sidebar.classList.toggle('open'));
+
+  // === Sidebar Toggle ===
+  toggleBtns.forEach(btn=>{
+    btn.addEventListener('click', ()=> sidebar.classList.toggle('open'));
   });
 
-  /* === Highlight active menu === */
+  // Tutup sidebar jika klik di luar (mobile)
+  document.addEventListener('click', e=>{
+    if(sidebar.classList.contains('open') && 
+      !sidebar.contains(e.target) && 
+      !e.target.closest('.toggle-sidebar')){
+      sidebar.classList.remove('open');
+    }
+  });
+
+  // === Menu Active Highlight ===
   const current = location.pathname;
   $('.menu-item').each(function(){
     const href = $(this).attr('href');
-    if (href && current.startsWith(href)) $(this).addClass('active');
+    if(href && current.startsWith(href)) $(this).addClass('active');
   });
 
-  /* === Page Init === */
+  // === Page Initializer ===
   if ($('#tblVideos').length) initVideosPage();
   if ($('#tblJobs').length) initJobsPage();
   if ($('#dzUpload').length) initUploadPage();
   if ($('#formSettings').length) initSettingsPage();
 
-  /* === Realtime Dashboard Counters === */
-  socket.on('job:completed', () => bump('#statJobsRunning', -1));
-  socket.on('job:failed', () => bump('#statJobsRunning', -1));
-  socket.on('job:progress', () => {});
+  // === Realtime job counter (optional dashboard) ===
+  socket.on('job:completed', ()=> bump('#statJobsRunning', -1));
+  socket.on('job:failed', ()=> bump('#statJobsRunning', -1));
+  socket.on('job:progress', ()=>{});
 });
 
-/* === Helper === */
+// ==========================
+// 🧩 UTILS
+// ==========================
 function bump(sel, delta){
   const el = document.querySelector(sel);
-  if (!el) return;
-  const n = parseInt(el.textContent||'0',10) + (delta||0);
-  el.textContent = Math.max(n, 0);
+  if(!el) return;
+  const n = parseInt(el.textContent||'0',10)+(delta||0);
+  el.textContent = Math.max(n,0);
 }
 
-/* === Videos Page === */
+function escapeHtml(s){
+  return (s||'').replace(/[&<>"']/g,m=>({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[m]));
+}
+
+// ==========================
+// 🌀 LOADER STYLE
+// ==========================
+if (!document.querySelector('#admin-loader-style')) {
+  const style = document.createElement('style');
+  style.id = 'admin-loader-style';
+  style.textContent = `
+    .loading-overlay {position:fixed;inset:0;background:rgba(0,0,0,.5);
+      display:grid;place-items:center;z-index:2000;}
+    .spinner {width:40px;height:40px;border:4px solid rgba(255,255,255,.3);
+      border-top-color:var(--admin-accent);border-radius:50%;
+      animation:spin .8s linear infinite;}
+    @keyframes spin {to{transform:rotate(360deg);}}
+  `;
+  document.head.appendChild(style);
+}
+
+// ==========================
+// 🎬 VIDEOS PAGE
+// ==========================
 function initVideosPage(){
   const $table = $('#tblVideos');
   const $modal = $('#modalVideo');
   const $form = $('#formVideo');
   let datatable;
 
-  const showLoader = () => $('body').append('<div id="loader" class="loading-overlay"><div class="spinner"></div></div>');
-  const hideLoader = () => $('#loader').remove();
+  const showLoader = ()=> $('body').append('<div id="loader" class="loading-overlay"><div class="spinner"></div></div>');
+  const hideLoader = ()=> $('#loader').remove();
 
   function loadTable(){
     showLoader();
@@ -57,7 +99,8 @@ function initVideosPage(){
         const created = new Date(v.createdAt).toLocaleString('id-ID');
         return [
           thumb,
-          `<div><div style="font-weight:600">${escapeHtml(v.title||'-')}</div><div style="color:#9aa7b6;font-size:12px">${v.slug}</div></div>`,
+          `<div><div style="font-weight:600">${escapeHtml(v.title||'-')}</div>
+            <div style="color:#9aa7b6;font-size:12px">${v.slug}</div></div>`,
           v.status,
           v.views || 0,
           created,
@@ -70,21 +113,22 @@ function initVideosPage(){
           `
         ];
       });
-      if (datatable){
-        datatable.clear().rows.add(rows).draw();
+
+      if (datatable) {
+        datatable.clear(); datatable.rows.add(rows).draw();
       } else {
         datatable = $table.DataTable({
           data: rows,
           columns: [
-            { title: 'Thumb' },
-            { title: 'Title' },
-            { title: 'Status' },
-            { title: 'Views' },
-            { title: 'Created' },
-            { title: 'Actions', orderable: false }
+            { title:'Thumb' },
+            { title:'Title' },
+            { title:'Status' },
+            { title:'Views' },
+            { title:'Created' },
+            { title:'Actions', orderable:false }
           ],
-          pageLength: 10,
-          responsive: true
+          pageLength:10,
+          responsive:true
         });
       }
     }).fail(()=> hideLoader());
@@ -95,8 +139,8 @@ function initVideosPage(){
   $('#tblVideos tbody').on('click','button',function(){
     const id = this.dataset.id;
     const action = this.dataset.action;
-    if (action==='edit') openVideoModal(id);
-    if (action==='delete') deleteVideo(id, loadTable);
+    if(action==='edit') openVideoModal(id);
+    if(action==='delete') deleteVideo(id, loadTable);
   });
 
   $('#btnCancelModal').on('click', ()=> closeVideoModal());
@@ -104,109 +148,152 @@ function initVideosPage(){
     e.preventDefault();
     const d = Object.fromEntries(new FormData(this).entries());
     const payload = {
-      title: d.title, description: d.description,
-      hls_master_url: d.hls_master_url, thumbnail_url: d.thumbnail_url, status: d.status
+      title:d.title, description:d.description,
+      hls_master_url:d.hls_master_url, thumbnail_url:d.thumbnail_url,
+      status:d.status
     };
-    const method = d.id ? 'PUT' : 'POST';
-    const url = d.id ? '/admin/api/videos/'+d.id : '/admin/api/videos';
-    $.ajax({ url, method, contentType:'application/json', data:JSON.stringify(payload) })
-    .done(res=>{
-      if(res.ok){
-        Swal.fire('Success','Video saved','success');
-        closeVideoModal(); loadTable();
-      } else Swal.fire('Error', res.error || 'Failed','error');
-    });
+    if (d.id) {
+      $.ajax({
+        url:'/admin/api/videos/'+d.id, method:'PUT', contentType:'application/json',
+        data:JSON.stringify(payload)
+      }).done(res=>{
+        if(res.ok){
+          Swal.fire('Saved','Video updated','success');
+          closeVideoModal(); loadTable();
+        } else Swal.fire('Error',res.error||'Failed','error');
+      });
+    } else {
+      $.ajax({
+        url:'/admin/api/videos', method:'POST', contentType:'application/json',
+        data:JSON.stringify(payload)
+      }).done(res=>{
+        if(res.ok){
+          Swal.fire('Created','Video created','success');
+          closeVideoModal(); loadTable();
+        } else Swal.fire('Error',res.error||'Failed','error');
+      });
+    }
   });
 
   function openVideoModal(id){
     $('#modalTitle').text(id?'Edit Video':'Create Video');
     $('#formVideo')[0].reset();
     $('#formVideo [name=id]').val('');
-    if (!id) return $modal.removeAttr('hidden');
+    if(!id) return $modal.removeAttr('hidden');
     $.get('/admin/api/videos').done(res=>{
       const it = (res.items||[]).find(x=>x.id===id);
       if(!it) return;
-      Object.entries(it).forEach(([k,v])=> $('#formVideo [name='+k+']').val(v||''));
+      $('#formVideo [name=id]').val(it.id);
+      $('#formVideo [name=title]').val(it.title||'');
+      $('#formVideo [name=description]').val(it.description||'');
+      $('#formVideo [name=hls_master_url]').val(it.hls_master_url||'');
+      $('#formVideo [name=thumbnail_url]').val(it.thumbnail_url||'');
+      $('#formVideo [name=status]').val(it.status||'ready');
       $modal.removeAttr('hidden');
     });
   }
   function closeVideoModal(){ $modal.attr('hidden','hidden'); }
 }
 
-function deleteVideo(id, onDone){
-  Swal.fire({ title:'Delete this video?', icon:'warning', showCancelButton:true }).then(r=>{
-    if(!r.isConfirmed) return;
-    $.ajax({ url:'/admin/api/videos/'+id, method:'DELETE' }).done(res=>{
-      if(res.ok){ Swal.fire('Deleted','Video removed','success'); onDone&&onDone(); }
-      else Swal.fire('Error',res.error||'Failed','error');
+function deleteVideo(id,onDone){
+  Swal.fire({title:'Delete this video?',icon:'warning',showCancelButton:true})
+    .then(r=>{
+      if(!r.isConfirmed) return;
+      $.ajax({url:'/admin/api/videos/'+id,method:'DELETE'}).done(res=>{
+        if(res.ok){ Swal.fire('Deleted','Video removed','success'); onDone&&onDone(); }
+        else Swal.fire('Error',res.error||'Failed','error');
+      });
     });
+}
+
+// ==========================
+// 📤 UPLOAD PAGE
+// ==========================
+function initUploadPage(){
+  // Pastikan Dropzone ada
+  if (typeof Dropzone === 'undefined') {
+    console.error('⚠️ Dropzone library not loaded!');
+    return;
+  }
+
+  Dropzone.autoDiscover = false;
+  const dzEl = document.querySelector('#dzUpload');
+  if (!dzEl || dzEl.dropzone) {
+    console.warn('⚠️ Dropzone already initialized.');
+    return;
+  }
+
+  new Dropzone('#dzUpload', {
+    url:'/admin/api/upload',
+    maxFilesize:2048,
+    acceptedFiles:'.mp4,.mov,.mkv',
+    parallelUploads:1,
+    createImageThumbnails:false,
+    init:function(){
+      this.on('success',(file,res)=>{
+        if(res && res.ok) Swal.fire('Queued','Upload diterima dan diproses','success');
+        else Swal.fire('Error',(res && res.error)||'Failed','error');
+      });
+      this.on('error',(file,msg)=> Swal.fire('Error',msg,'error'));
+    }
   });
 }
 
-/* === Jobs Page === */
+// ==========================
+// ⚙️ JOBS PAGE
+// ==========================
 function initJobsPage(){
   const $table = $('#tblJobs');
   let datatable;
+
   function loadJobs(){
     $.get('/admin/api/jobs').done(res=>{
       if(!res.ok) return;
       const rows = (res.items||[]).map(j=>{
-        const updated = new Date(j.updatedAt || j.createdAt).toLocaleString('id-ID');
+        const updated = new Date(j.updatedAt||j.createdAt).toLocaleString('id-ID');
         return [ j.video_id, j.type, j.status, (j.progress||0)+'%', updated ];
       });
-      if (datatable){
-        datatable.clear().rows.add(rows).draw();
+      if(datatable){
+        datatable.clear(); datatable.rows.add(rows).draw();
       } else {
         datatable = $table.DataTable({
-          data: rows,
-          columns: [
-            { title: 'Video ID' },
-            { title: 'Type' },
-            { title: 'Status' },
-            { title: 'Progress' },
-            { title: 'Updated' }
+          data:rows,
+          columns:[
+            {title:'Video ID'},
+            {title:'Type'},
+            {title:'Status'},
+            {title:'Progress'},
+            {title:'Updated'}
           ],
-          pageLength: 10,
-          responsive: true
+          pageLength:10,
+          responsive:true
         });
       }
     });
   }
   loadJobs();
-  socket.on('job:progress', loadJobs);
-  socket.on('job:completed', loadJobs);
-  socket.on('job:failed', loadJobs);
+  socket.on('job:progress',()=>loadJobs());
+  socket.on('job:completed',()=>loadJobs());
+  socket.on('job:failed',()=>loadJobs());
 }
 
-/* === Settings Page === */
+// ==========================
+// ⚙️ SETTINGS PAGE
+// ==========================
 function initSettingsPage(){
-  $('#formSettings').on('submit', function(e){
+  $('#formSettings').on('submit',function(e){
     e.preventDefault();
     const payload = Object.fromEntries(new FormData(this).entries());
-    fetch('/admin/api/settings', {
-      method: 'POST',
-      headers: { 'Content-Type':'application/json' },
-      body: JSON.stringify(payload)
-    }).then(r=>r.json()).then(res=>{
+    fetch('/admin/api/settings',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(payload)
+    })
+    .then(r=>r.json())
+    .then(res=>{
       if(res.ok) Swal.fire('Saved','Settings updated','success');
       else Swal.fire('Error',res.error||'Failed','error');
-    }).catch(()=> Swal.fire('Error','Network error','error'));
+    })
+    .catch(()=> Swal.fire('Error','Network error','error'));
   });
-}
-
-/* === Utility === */
-function escapeHtml(s){
-  return (s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-}
-
-/* === Loader CSS === */
-if (!document.querySelector('#admin-loader-style')) {
-  const style = document.createElement('style');
-  style.id = 'admin-loader-style';
-  style.textContent = `
-  .loading-overlay {position:fixed;inset:0;background:rgba(0,0,0,.5);display:grid;place-items:center;z-index:2000;}
-  .spinner {width:40px;height:40px;border:4px solid rgba(255,255,255,.3);border-top-color:var(--admin-accent);border-radius:50%;animation:spin 0.8s linear infinite;}
-  @keyframes spin {to{transform:rotate(360deg);}}
-  `;
-  document.head.appendChild(style);
 }
