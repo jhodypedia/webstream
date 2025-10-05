@@ -1,15 +1,15 @@
 // ================================
-// ⚙️ PANSA ADMIN DASHBOARD SCRIPT
+// ⚙️ PANSA ADMIN DASHBOARD SCRIPT (FINAL)
 // ================================
 
-const socket = io(); // for realtime jobs
+const socket = io();
 Dropzone.autoDiscover = false;
 
 $(function(){
   const sidebar = document.querySelector('.sidebar');
   const toggleBtns = document.querySelectorAll('.toggle-sidebar, .sidebar .toggle-btn');
 
-  // === Sidebar open/close (desktop & mobile)
+  // === Sidebar toggle (desktop & mobile)
   toggleBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       sidebar.classList.toggle('open');
@@ -30,7 +30,7 @@ $(function(){
   if ($('#dzUpload').length) initUploadPage();
   if ($('#formSettings').length) initSettingsPage();
 
-  // Realtime jobs events
+  // Realtime events
   socket.on('job:progress', ()=> bump('#statJobsRunning', 0));
   socket.on('job:completed', ()=> bump('#statJobsRunning', -1));
   socket.on('job:failed', ()=> bump('#statJobsRunning', -1));
@@ -44,7 +44,7 @@ function bump(sel, delta){
 }
 
 /* ===================================================
-   📹 Videos Page
+   📹 VIDEOS PAGE
 =================================================== */
 function initVideosPage(){
   const $table = $('#tblVideos');
@@ -52,6 +52,7 @@ function initVideosPage(){
   const $form = $('#formVideo');
   let datatable;
 
+  // Loader
   function showLoader(){
     $('body').append(`<div id="loader" class="loading-overlay"><div class="spinner"></div></div>`);
   }
@@ -63,21 +64,21 @@ function initVideosPage(){
       hideLoader();
       const rows = (res.items||[]).map(v=>{
         const thumb = v.thumbnail_url
-          ? `<img src="${v.thumbnail_url}" style="width:80px;height:45px;object-fit:cover;border-radius:6px">`
-          : `<div style="width:80px;height:45px;background:#222;border-radius:6px"></div>`;
+          ? `<img src="${v.thumbnail_url}" class="vid-thumb">`
+          : `<div class="vid-thumb placeholder"></div>`;
         const created = new Date(v.createdAt).toLocaleString('id-ID');
         return [
           thumb,
-          `<div><strong>${escapeHtml(v.title||'-')}</strong><div style="color:#9aa7b6;font-size:12px">${v.slug}</div></div>`,
-          v.status,
+          `<div class="vid-meta"><strong>${escapeHtml(v.title||'-')}</strong><div class="vid-slug">${v.slug}</div></div>`,
+          `<span class="badge status-${v.status}">${v.status}</span>`,
           v.views || 0,
           created,
           `
-            <div style="display:flex;gap:6px">
-              <button class="btn btn-ghost btn-sm" data-action="edit" data-id="${v.id}"><i class="fa fa-edit"></i></button>
-              <button class="btn btn-ghost btn-sm" data-action="delete" data-id="${v.id}"><i class="fa fa-trash"></i></button>
-              <a class="btn btn-primary btn-sm" href="/watch/${v.slug}" target="_blank"><i class="fa fa-play"></i></a>
-            </div>`
+          <div class="tbl-actions">
+            <button class="btn btn-ghost btn-sm" data-action="edit" data-id="${v.id}" title="Edit"><i class="fa fa-edit"></i></button>
+            <button class="btn btn-ghost btn-sm danger" data-action="delete" data-id="${v.id}" title="Delete"><i class="fa fa-trash"></i></button>
+            <a class="btn btn-primary btn-sm" href="/watch/${v.slug}" target="_blank" title="View"><i class="fa fa-play"></i></a>
+          </div>`
         ];
       });
 
@@ -86,6 +87,9 @@ function initVideosPage(){
       } else {
         datatable = $table.DataTable({
           data: rows,
+          pageLength: 10,
+          responsive: true,
+          destroy: true,
           columns: [
             { title: 'Thumb' },
             { title: 'Title' },
@@ -94,12 +98,12 @@ function initVideosPage(){
             { title: 'Created' },
             { title: 'Actions', orderable: false }
           ],
-          pageLength: 10,
-          responsive: true,
-          destroy: true,
           language: {
             search: "_INPUT_",
             searchPlaceholder: "Search videos..."
+          },
+          createdRow: (row) => {
+            $(row).addClass('row-animate');
           }
         });
       }
@@ -108,7 +112,10 @@ function initVideosPage(){
 
   loadTable();
 
+  // Create video
   $('#btnCreateVideo').on('click', ()=> openVideoModal());
+
+  // Edit/Delete
   $('#tblVideos tbody').on('click','button',function(){
     const id = this.dataset.id;
     const action = this.dataset.action;
@@ -116,8 +123,9 @@ function initVideosPage(){
     if (action==='delete') deleteVideo(id, loadTable);
   });
 
-  $('#btnCancelModal').on('click', ()=> $modal.attr('hidden','hidden'));
+  $('#btnCancelModal, #btnCloseModal').on('click', ()=> closeModal());
 
+  // Submit form
   $form.on('submit', function(e){
     e.preventDefault();
     const d = Object.fromEntries(new FormData(this).entries());
@@ -132,13 +140,13 @@ function initVideosPage(){
     .done(res=>{
       if(res.ok){
         Swal.fire({
-          title:'Success',
-          text:'Video saved successfully',
           icon:'success',
+          title:'Saved!',
+          text:'Video updated successfully',
           showConfirmButton:false,
           timer:1400
         });
-        $modal.attr('hidden','hidden');
+        closeModal();
         loadTable();
       } else {
         Swal.fire('Error',res.error||'Failed','error');
@@ -150,7 +158,7 @@ function initVideosPage(){
     $('#formVideo')[0].reset();
     $('#formVideo [name=id]').val('');
     $('#modalTitle').text(id ? 'Edit Video' : 'Create Video');
-    if(!id) return $modal.removeAttr('hidden');
+    if(!id) return showModal();
     $.get('/admin/api/videos').done(res=>{
       const it = (res.items||[]).find(x=>x.id===id);
       if(!it) return;
@@ -160,22 +168,32 @@ function initVideosPage(){
       $('#formVideo [name=hls_master_url]').val(it.hls_master_url||'');
       $('#formVideo [name=thumbnail_url]').val(it.thumbnail_url||'');
       $('#formVideo [name=status]').val(it.status||'ready');
-      $modal.removeAttr('hidden');
+      showModal();
     });
+  }
+
+  function showModal(){
+    $modal.fadeIn(200).removeAttr('hidden');
+    $('.admin-modal__body').addClass('animate__fadeInUp');
+  }
+  function closeModal(){
+    $modal.fadeOut(150, ()=> $modal.attr('hidden','hidden'));
   }
 }
 
 function deleteVideo(id,onDone){
   Swal.fire({
     title:'Delete this video?',
+    text:'This action cannot be undone!',
     icon:'warning',
     showCancelButton:true,
-    confirmButtonText:'Yes, delete it!'
+    confirmButtonText:'Yes, delete it!',
+    confirmButtonColor:'#e74c3c'
   }).then(r=>{
     if(!r.isConfirmed) return;
     $.ajax({ url:'/admin/api/videos/'+id, method:'DELETE' }).done(res=>{
       if(res.ok){
-        Swal.fire('Deleted','Video removed','success');
+        Swal.fire('Deleted!','Video removed','success');
         onDone&&onDone();
       } else Swal.fire('Error',res.error||'Failed','error');
     });
@@ -183,13 +201,13 @@ function deleteVideo(id,onDone){
 }
 
 /* ===================================================
-   ☁️ Upload Page
+   ☁️ UPLOAD PAGE
 =================================================== */
 function initUploadPage(){
   if (Dropzone.instances.length) Dropzone.instances.forEach(dz=>dz.destroy());
   const dz = new Dropzone("#dzUpload", {
     url: "/admin/api/upload",
-    maxFilesize: 2048, // 2GB
+    maxFilesize: 2048,
     acceptedFiles: ".mp4,.mov,.mkv",
     parallelUploads: 1,
     timeout: 0,
@@ -210,7 +228,7 @@ function initUploadPage(){
 }
 
 /* ===================================================
-   🧩 Jobs Page
+   🧩 JOBS PAGE
 =================================================== */
 function initJobsPage(){
   const $table = $('#tblJobs');
@@ -228,16 +246,16 @@ function initJobsPage(){
       } else {
         datatable = $table.DataTable({
           data: rows,
+          pageLength: 10,
+          responsive: true,
+          destroy: true,
           columns: [
             { title: "Video ID" },
             { title: "Type" },
             { title: "Status" },
             { title: "Progress" },
             { title: "Updated" }
-          ],
-          pageLength: 10,
-          responsive: true,
-          destroy: true
+          ]
         });
       }
     });
@@ -250,7 +268,7 @@ function initJobsPage(){
 }
 
 /* ===================================================
-   ⚙️ Settings Page
+   ⚙️ SETTINGS PAGE
 =================================================== */
 function initSettingsPage(){
   $('#formSettings').on('submit', function(e){
@@ -267,7 +285,7 @@ function initSettingsPage(){
         Swal.fire({
           icon:'success',
           title:'Saved',
-          text:'Settings updated & reloaded',
+          text:'Settings updated successfully',
           timer:1500,
           showConfirmButton:false
         });
@@ -277,7 +295,7 @@ function initSettingsPage(){
 }
 
 /* ===================================================
-   🧠 Utility
+   🧠 UTILITIES
 =================================================== */
 function escapeHtml(s){
   return (s||'').replace(/[&<>"']/g,m=>({
@@ -285,24 +303,37 @@ function escapeHtml(s){
   }[m]));
 }
 
-// Loader effect style
-if(!document.querySelector('#admin-loader-style')){
+// Custom loader + Datatable glow
+if(!document.querySelector('#admin-extra-style')){
   const style = document.createElement('style');
-  style.id='admin-loader-style';
+  style.id='admin-extra-style';
   style.textContent = `
   .loading-overlay {
-    position: fixed; inset:0; background:rgba(0,0,0,.6);
+    position: fixed; inset:0; background:rgba(0,0,0,.7);
     display:grid; place-items:center; z-index:9999;
     animation: fadeIn .3s ease;
   }
   .spinner {
-    width: 50px; height: 50px;
+    width: 60px; height: 60px;
     border: 4px solid rgba(255,255,255,.2);
     border-top-color: var(--admin-accent);
     border-radius: 50%;
     animation: spin 0.9s linear infinite;
   }
   @keyframes spin {to {transform: rotate(360deg);}}
+  @keyframes rowFade {from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+  .row-animate {animation:rowFade .3s ease;}
+  .vid-thumb{width:80px;height:45px;object-fit:cover;border-radius:6px;box-shadow:0 0 8px rgba(0,0,0,.3);}
+  .vid-thumb.placeholder{background:#222;}
+  .vid-meta strong{color:#fff;font-weight:600;}
+  .vid-slug{color:#aaa;font-size:12px;}
+  .tbl-actions{display:flex;gap:6px;justify-content:center;}
+  .badge{padding:4px 8px;border-radius:6px;font-size:12px;text-transform:capitalize;}
+  .status-ready{background:rgba(91,255,168,.15);color:#6bffa0;}
+  .status-uploaded{background:rgba(255,230,91,.15);color:#ffe95b;}
+  .status-failed{background:rgba(255,91,91,.15);color:#ff6161;}
+  table.dataTable tbody tr:hover{background:rgba(255,255,255,.05);}
+  table.dataTable thead th{color:#6be2ff;}
   `;
   document.head.appendChild(style);
 }
