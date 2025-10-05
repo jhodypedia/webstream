@@ -3,15 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title><%= title || "Admin Panel" %></title>
-  
-  <!-- FONT & STYLE -->
+  <title><%= title || "Admin | PansaStream" %></title>
+
+  <!-- FONT & ICON -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-wbVf7mv4DFXlP+3Z4vZ3XQdIVsk2zjUfNoqgkM+5a6NvH60UJcTV+RdbZ4GAXZAnx2i09s5kASkJH4lU3BUaNw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/public/app.css">
   <link rel="stylesheet" href="/public/admin.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" referrerpolicy="no-referrer">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.12.3/dist/sweetalert2.min.css">
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.css" referrerpolicy="no-referrer">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.css" integrity="sha512-DtpP7MmuKRGHntTfElcKhQKhaR2hZpGcqk2bq6YhYDTfD8ZKuDMo33RkQl9KtszLPDWQIlzAX0D/wo5C0NCh6Q==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.12.3/dist/sweetalert2.min.css">
 </head>
 
 <body class="admin-theme">
@@ -19,20 +22,23 @@
     <!-- SIDEBAR -->
     <aside class="sidebar">
       <div class="logo">
-        <a href="/admin" class="brand"><i class="fa-solid fa-circle-nodes"></i> Pansa<span class="accent">Admin</span></a>
+        <a href="/admin" class="brand">
+          <i class="fa-solid fa-play"></i>
+          <span>Pansa<span class="accent">Admin</span></span>
+        </a>
         <button class="toggle-btn"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
       <nav class="menu">
-        <a href="/admin" class="menu-item"><i class="fa-solid fa-gauge"></i> Dashboard</a>
-        <a href="/admin/upload" class="menu-item"><i class="fa-solid fa-upload"></i> Upload</a>
-        <a href="/admin/videos" class="menu-item"><i class="fa-solid fa-photo-film"></i> Videos</a>
-        <a href="/admin/jobs" class="menu-item"><i class="fa-solid fa-list-check"></i> Jobs</a>
-        <a href="/admin/settings" class="menu-item"><i class="fa-solid fa-gear"></i> Settings</a>
+        <a href="/admin" class="menu-item <%= active==='dashboard'?'active':'' %>"><i class="fa-solid fa-gauge"></i>Dashboard</a>
+        <a href="/admin/upload" class="menu-item <%= active==='upload'?'active':'' %>"><i class="fa-solid fa-upload"></i>Upload</a>
+        <a href="/admin/videos" class="menu-item <%= active==='videos'?'active':'' %>"><i class="fa-solid fa-photo-film"></i>Videos</a>
+        <a href="/admin/jobs" class="menu-item <%= active==='jobs'?'active':'' %>"><i class="fa-solid fa-list-check"></i>Jobs</a>
+        <a href="/admin/settings" class="menu-item <%= active==='settings'?'active':'' %>"><i class="fa-solid fa-gear"></i>Settings</a>
       </nav>
 
       <div class="sidebar-footer">
-        <a href="/admin/logout" class="menu-item logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+        <a href="/admin/logout" class="menu-item logout"><i class="fa-solid fa-right-from-bracket"></i>Logout</a>
       </div>
     </aside>
 
@@ -41,20 +47,19 @@
       <header class="admin-topbar">
         <button class="toggle-sidebar"><i class="fa-solid fa-bars"></i></button>
         <div class="page-title"><%= title || '' %></div>
-        <div class="admin-user"><i class="fa-solid fa-user"></i> <%= user?.name || 'Administrator' %></div>
+        <div class="admin-user"><i class="fa-solid fa-circle-user"></i> <%= user?.name || 'Administrator' %></div>
       </header>
-
       <main class="admin-body">
         <%- body %>
       </main>
     </div>
   </div>
 
-  <!-- JS ORDER: jQuery → SweetAlert → DataTables → Dropzone → Socket.IO → admin.js -->
+  <!-- JS -->
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.12.3/dist/sweetalert2.all.min.js"></script>
   <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.js" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.js" integrity="sha512-DtpP7MmuKRGHntTfElcKhQKhaR2hZpGcqk2bq6YhYDTfD8ZKuDMo33RkQl9KtszLPDWQIlzAX0D/wo5C0NCh6Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script src="/public/admin.js"></script>
 </body>
