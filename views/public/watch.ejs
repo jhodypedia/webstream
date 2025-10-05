@@ -1,100 +1,136 @@
 <section class="watch-page">
-  <div class="video-wrapper">
-    <video id="video" playsinline preload="metadata"></video>
-    <div class="spinner" id="spinner"></div>
-    <div class="watermark">Pansa<span>Stream</span></div>
+  <div class="player-container">
+    <div class="video-box">
+      <video id="player" preload="metadata" playsinline></video>
 
-    <!-- Controls -->
-    <div class="player-controls" id="controls">
-      <div class="ctrl-center">
-        <button class="ctrl-btn ctrl-skip" id="backward"><i class="fa-solid fa-backward"></i><span>10</span></button>
-        <button class="ctrl-btn" id="playBtn"><i class="fa-solid fa-play"></i></button>
-        <button class="ctrl-btn ctrl-skip" id="forward"><span>10</span><i class="fa-solid fa-forward"></i></button>
+      <!-- Overlay (Play Button) -->
+      <div class="overlay" id="overlay">
+        <button id="playPauseBtn" class="play-btn">
+          <i class="fa-solid fa-play"></i>
+        </button>
       </div>
 
-      <div class="ctrl-bottom">
-        <div class="volume">
-          <i id="volIcon" class="fa-solid fa-volume-high"></i>
-          <input id="volume" type="range" min="0" max="1" step="0.05" value="1">
+      <!-- Custom Controls -->
+      <div class="controls" id="controls">
+        <div class="progress-bar" id="progressBar">
+          <div id="progress"></div>
         </div>
-        <button class="ctrl-btn" id="fullscreenBtn"><i class="fa-solid fa-expand"></i></button>
+        <div class="buttons">
+          <button id="playPauseCtrl" class="ctrl-btn">
+            <i class="fa-solid fa-play"></i>
+          </button>
+          <button id="muteBtn" class="ctrl-btn">
+            <i class="fa-solid fa-volume-high"></i>
+          </button>
+          <input id="volume" type="range" min="0" max="1" step="0.05" value="1">
+          <button id="fullscreenBtn" class="ctrl-btn">
+            <i class="fa-solid fa-expand"></i>
+          </button>
+        </div>
       </div>
-
-      <div class="progress-bar" id="progressBar"><div class="progress" id="progress"></div></div>
     </div>
-  </div>
 
-  <div class="video-meta">
-    <h1><%= video.title %></h1>
-    <div class="meta-stats">
-      <svg class="ico" viewBox="0 0 24 24"><path d="M3 12s3-6 9-6 9 6 9 6-3 6-9 6-9-6-9-6zm9-3a3 3 0 1 1 0 6 3 3 0 0 1 0-6z"/></svg>
-      <span id="views"><%= video.views %></span> views • <%= new Date(video.createdAt).toLocaleDateString('id-ID') %>
+    <!-- Meta Info -->
+    <div class="video-meta">
+      <h1><%= video.title %></h1>
+      <div class="meta-stats">
+        <i class="fa-solid fa-eye"></i>
+        <span id="views"><%= video.views %></span> views
+        <span>•</span>
+        <span><%= new Date(video.createdAt).toLocaleDateString('id-ID') %></span>
+      </div>
+      <% if (video.description) { %>
+        <p class="description"><%= video.description %></p>
+      <% } %>
     </div>
-    <p><%= video.description || '' %></p>
   </div>
 </section>
-
-<footer class="footer">© 2025 PansaStream <a href="/">Home</a></footer>
 
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 <script src="https://kit.fontawesome.com/a2d9b09d5b.js" crossorigin="anonymous"></script>
 <script>
-(() => {
-  const video=document.getElementById('video');
-  const spinner=document.getElementById('spinner');
-  const controls=document.getElementById('controls');
-  const playBtn=document.getElementById('playBtn');
-  const backward=document.getElementById('backward');
-  const forward=document.getElementById('forward');
-  const volume=document.getElementById('volume');
-  const volIcon=document.getElementById('volIcon');
-  const fullscreenBtn=document.getElementById('fullscreenBtn');
-  const progress=document.getElementById('progress');
-  const progressBar=document.getElementById('progressBar');
-  const topbar=document.querySelector('.topbar');
-  let hideTimer;
+(function(){
+  const video = document.getElementById('player');
+  const overlay = document.getElementById('overlay');
+  const playPauseBtn = document.getElementById('playPauseBtn');
+  const playPauseCtrl = document.getElementById('playPauseCtrl');
+  const volumeSlider = document.getElementById('volume');
+  const muteBtn = document.getElementById('muteBtn');
+  const fullscreenBtn = document.getElementById('fullscreenBtn');
+  const progress = document.getElementById('progress');
+  const progressBar = document.getElementById('progressBar');
+  const controls = document.getElementById('controls');
+  const src = '<%= video.hls_master_url %>';
 
-  const src='<%= video.hls_master_url %>';
-  if(Hls.isSupported()){const hls=new Hls();hls.loadSource(src);hls.attachMedia(video);}
-  else video.src=src;
+  // Setup HLS
+  if (Hls.isSupported()) {
+    const hls = new Hls();
+    hls.loadSource(src);
+    hls.attachMedia(video);
+  } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+    video.src = src;
+  }
 
-  playBtn.onclick=()=>video.paused?video.play():video.pause();
-  backward.onclick=()=>video.currentTime-=10;
-  forward.onclick=()=>video.currentTime+=10;
+  // Play / Pause
+  const togglePlay = () => video.paused ? video.play() : video.pause();
+  playPauseBtn.onclick = togglePlay;
+  playPauseCtrl.onclick = togglePlay;
 
-  video.addEventListener('waiting',()=>spinner.style.display='block');
-  video.addEventListener('playing',()=>spinner.style.display='none');
-  video.addEventListener('pause',()=>spinner.style.display='none');
-  video.addEventListener('play',()=>playBtn.innerHTML='<i class="fa-solid fa-pause"></i>');
-  video.addEventListener('pause',()=>playBtn.innerHTML='<i class="fa-solid fa-play"></i>');
-
-  volume.addEventListener('input',e=>{
-    video.volume=e.target.value;
-    volIcon.className=e.target.value==0?'fa-solid fa-volume-xmark':(e.target.value<0.5?'fa-solid fa-volume-low':'fa-solid fa-volume-high');
+  video.addEventListener('play', ()=>{
+    overlay.style.opacity = 0;
+    playPauseBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+    playPauseCtrl.innerHTML = '<i class="fa-solid fa-pause"></i>';
+  });
+  video.addEventListener('pause', ()=>{
+    overlay.style.opacity = 1;
+    playPauseBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
+    playPauseCtrl.innerHTML = '<i class="fa-solid fa-play"></i>';
   });
 
-  video.addEventListener('timeupdate',()=>progress.style.width=(video.currentTime/video.duration*100)+'%');
-  progressBar.addEventListener('click',e=>{
-    const rect=progressBar.getBoundingClientRect();
-    const pos=(e.clientX-rect.left)/rect.width;
-    video.currentTime=pos*video.duration;
+  // Volume
+  muteBtn.addEventListener('click', ()=>{
+    video.muted = !video.muted;
+    muteBtn.innerHTML = video.muted 
+      ? '<i class="fa-solid fa-volume-xmark"></i>'
+      : '<i class="fa-solid fa-volume-high"></i>';
+  });
+  volumeSlider.addEventListener('input', e=>{
+    video.volume = e.target.value;
   });
 
-  fullscreenBtn.onclick=()=>!document.fullscreenElement?video.requestFullscreen():document.exitFullscreen();
+  // Progress
+  video.addEventListener('timeupdate', ()=>{
+    const p = (video.currentTime / video.duration) * 100;
+    progress.style.width = p + '%';
+  });
+  progressBar.addEventListener('click', e=>{
+    const rect = progressBar.getBoundingClientRect();
+    const pos = (e.clientX - rect.left) / rect.width;
+    video.currentTime = pos * video.duration;
+  });
 
-  // Auto hide topbar and controls
-  const showUI=()=>{
-    controls.classList.remove('hide');
-    topbar.classList.remove('hide');
-    clearTimeout(hideTimer);
-    hideTimer=setTimeout(()=>{
-      controls.classList.add('hide');
-      topbar.classList.add('hide');
-    },2500);
-  };
-  document.addEventListener('mousemove',showUI);
-  document.addEventListener('touchstart',showUI);
+  // Fullscreen manual only
+  fullscreenBtn.addEventListener('click', ()=>{
+    if (!document.fullscreenElement) {
+      video.parentElement.requestFullscreen();
+    } else {
+      document.exitFullscreen();
+    }
+  });
 
-  fetch('/api/videos/view/<%= video.id %>',{method:'POST'});
+  // Hide controls when idle
+  let timer;
+  document.addEventListener('mousemove', ()=>{
+    controls.classList.remove('hidden');
+    clearTimeout(timer);
+    timer = setTimeout(()=> controls.classList.add('hidden'), 2500);
+  });
+
+  // Increment view count
+  fetch('/api/videos/view/<%= video.id %>', { method:'POST' })
+    .then(()=> {
+      const el = document.getElementById('views');
+      el.textContent = (parseInt(el.textContent||'0') + 1);
+    });
 })();
 </script>
