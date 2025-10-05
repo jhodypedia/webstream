@@ -1,22 +1,31 @@
 <section>
-  <h2 style="margin-bottom:20px;">Dashboard Overview</h2>
+  <h2 style="margin-bottom:20px;">Dashboard</h2>
 
   <div class="stat-grid">
     <div class="stat-card">
-      <h2 id="statVideos"><%= stats.totalVideos %></h2>
+      <h2 id="statVideos">0</h2>
       <p>Total Videos</p>
     </div>
     <div class="stat-card">
-      <h2><%= stats.totalViews %></h2>
+      <h2 id="statViews">0</h2>
       <p>Total Views</p>
     </div>
     <div class="stat-card">
-      <h2 id="statJobsQueued"><%= stats.jobsQueued %></h2>
+      <h2 id="statJobsQueued">0</h2>
       <p>Jobs Queued</p>
     </div>
     <div class="stat-card">
-      <h2 id="statJobsRunning"><%= stats.jobsRunning %></h2>
+      <h2 id="statJobsRunning">0</h2>
       <p>Jobs Running</p>
+    </div>
+  </div>
+
+  <div class="admin-card" style="margin-top:30px;">
+    <h3>Quick Actions</h3>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;">
+      <a href="/admin/upload" class="btn btn-primary">Upload Video</a>
+      <a href="/admin/videos" class="btn btn-ghost">Manage Videos</a>
+      <a href="/admin/jobs" class="btn btn-ghost">View Jobs</a>
     </div>
   </div>
 </section>
